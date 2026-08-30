@@ -1,5 +1,5 @@
 import { closeBrackets, closeBracketsKeymap } from "@codemirror/autocomplete";
-import { defaultKeymap, history, historyKeymap, indentWithTab } from "@codemirror/commands";
+import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { css } from "@codemirror/lang-css";
 import { html } from "@codemirror/lang-html";
 import { bracketMatching, indentOnInput, syntaxHighlighting } from "@codemirror/language";
@@ -56,13 +56,10 @@ export function createBaseExtensions(language: EditorLanguage): Extension[] {
     placeholder(PLACEHOLDER_TEXT[language]),
     // 줄바꿈은 기본 켜짐. 3단계에서 Compartment로 옮겨 토글 대상으로 만든다.
     EditorView.lineWrapping,
-    keymap.of([
-      ...closeBracketsKeymap,
-      ...defaultKeymap,
-      ...historyKeymap,
-      // 코드 에디터이므로 Tab을 들여쓰기에 사용한다.
-      indentWithTab,
-    ]),
+    // Tab은 바인딩하지 않는다. indentWithTab을 넣으면 키보드 사용자가
+    // 에디터에서 포커스를 빼낼 수 없는 키보드 트랩이 된다.
+    // 들여쓰기는 자동 들여쓰기와 defaultKeymap의 Mod-] / Mod-[ 로 대신한다.
+    keymap.of([...closeBracketsKeymap, ...defaultKeymap, ...historyKeymap]),
     editorTheme,
     syntaxHighlighting(editorHighlightStyle),
     languageSupport(language),
