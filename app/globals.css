@@ -1,13 +1,31 @@
 @import "tailwindcss";
 
-/* 앱 크롬(작업 화면 UI)의 색 토큰.
+/* 앱 크롬(작업 화면 UI)의 색 정의.
+   현재는 라이트 값만 두되, 향후 테마 교체 시 이 변수 값만 바꾸면 되도록
+   하드코딩하지 않고 CSS 변수로 관리한다.
    iframe 미리보기 내부에는 이 스타일이 전달되지 않는다. */
-@theme {
-  --color-chrome-bg: #f4f4f5;
-  --color-chrome-panel: #ffffff;
-  --color-chrome-border: #e4e4e7;
-  --color-chrome-text: #18181b;
-  --color-chrome-muted: #71717a;
+:root {
+  --chrome-bg: #f4f4f5;
+  --chrome-panel: #ffffff;
+  --chrome-subtle: #fafafa;
+  --chrome-border: #e4e4e7;
+  --chrome-text: #18181b;
+  --chrome-muted: #71717a;
+  --chrome-accent: #2563eb;
+  --chrome-handle: #d4d4d8;
+}
+
+/* inline 옵션을 쓰면 유틸리티가 var() 참조를 그대로 사용하므로,
+   나중에 :root 값만 교체해도 전체 색이 따라간다. */
+@theme inline {
+  --color-chrome-bg: var(--chrome-bg);
+  --color-chrome-panel: var(--chrome-panel);
+  --color-chrome-subtle: var(--chrome-subtle);
+  --color-chrome-border: var(--chrome-border);
+  --color-chrome-text: var(--chrome-text);
+  --color-chrome-muted: var(--chrome-muted);
+  --color-chrome-accent: var(--chrome-accent);
+  --color-chrome-handle: var(--chrome-handle);
 }
 
 html,
@@ -16,6 +34,6 @@ body {
 }
 
 body {
-  background-color: var(--color-chrome-bg);
-  color: var(--color-chrome-text);
+  background-color: var(--chrome-bg);
+  color: var(--chrome-text);
 }

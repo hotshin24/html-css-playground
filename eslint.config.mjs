@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // exFAT 볼륨에서 macOS가 만드는 AppleDouble 메타데이터 파일.
+    // 소스가 아니므로 검사 대상에서 제외한다.
+    "**/._*",
   ]),
 ]);
 
