@@ -1,10 +1,18 @@
-import { DUMMY_SESSION } from "@/lib/constants";
+"use client";
+
+import SettingsPopover from "@/components/editor/SettingsPopover";
+import { DUMMY_SESSION, type EditorSettings } from "@/lib/constants";
+
+type TopBarProps = {
+  settings: EditorSettings;
+  onSettingsChange: (settings: EditorSettings) => void;
+};
 
 /**
  * 학습 화면 상단 바.
  * 구역·시도 표시는 1단계에서 더미 값이며, 소스 등록·구역 편집 화면이 생기면 교체한다.
  */
-export default function TopBar() {
+export default function TopBar({ settings, onSettingsChange }: TopBarProps) {
   const { sectionIndex, sectionTotal, sectionName, attemptUsed, attemptTotal } =
     DUMMY_SESSION;
 
@@ -19,14 +27,7 @@ export default function TopBar() {
           시도 {attemptUsed}/{attemptTotal}
         </span>
 
-        {/* 설정 패널은 3단계에서 연결한다. */}
-        <button
-          type="button"
-          disabled
-          className="rounded-md border border-chrome-border px-3 py-1.5 text-sm disabled:cursor-not-allowed disabled:text-chrome-muted"
-        >
-          설정
-        </button>
+        <SettingsPopover settings={settings} onChange={onSettingsChange} />
 
         {/* 판정 로직은 다음 단계 범위이므로 비활성 상태로 둔다. */}
         <button

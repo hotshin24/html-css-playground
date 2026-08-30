@@ -5,7 +5,6 @@ import { html } from "@codemirror/lang-html";
 import { bracketMatching, indentOnInput, syntaxHighlighting } from "@codemirror/language";
 import type { Extension } from "@codemirror/state";
 import {
-  EditorView,
   drawSelection,
   dropCursor,
   highlightActiveLine,
@@ -36,11 +35,13 @@ const PLACEHOLDER_TEXT: Record<EditorLanguage, string> = {
 };
 
 /**
- * 이름 제안(자동완성)을 제외한 에디터 기본 확장.
+ * 설정과 무관하게 항상 적용되는 에디터 기본 확장.
  *
  * `basicSetup`은 `autocompletion()`을 강제로 포함하므로 사용하지 않고 직접 조립한다.
  * `closeBrackets`는 @codemirror/autocomplete 패키지에 들어 있지만
  * 완성 기능과는 독립적으로 동작하는 별도 확장이다.
+ *
+ * 토글 대상(이름 제안, 줄바꿈)은 여기 넣지 않고 Compartment로 관리한다.
  */
 export function createBaseExtensions(language: EditorLanguage): Extension[] {
   return [
@@ -54,8 +55,6 @@ export function createBaseExtensions(language: EditorLanguage): Extension[] {
     bracketMatching(),
     closeBrackets(),
     placeholder(PLACEHOLDER_TEXT[language]),
-    // 줄바꿈은 기본 켜짐. 3단계에서 Compartment로 옮겨 토글 대상으로 만든다.
-    EditorView.lineWrapping,
     // Tab은 바인딩하지 않는다. indentWithTab을 넣으면 키보드 사용자가
     // 에디터에서 포커스를 빼낼 수 없는 키보드 트랩이 된다.
     // 들여쓰기는 자동 들여쓰기와 defaultKeymap의 Mod-] / Mod-[ 로 대신한다.

@@ -35,3 +35,20 @@ export const RESIZER_PX = 6;
 
 /** 키보드 방향키로 리사이저를 움직일 때의 이동량(px). */
 export const RESIZER_KEY_STEP_PX = 16;
+
+/** 에디터 설정. 설정 패널의 토글 두 개에 대응한다. */
+export type EditorSettings = {
+  /**
+   * 코드 이름 제안.
+   * 태그 이름, HTML 속성 이름·값, CSS 속성명·값 제안을 하나로 묶어 제어한다.
+   * 학습자가 이름을 직접 떠올리는 것이 훈련의 핵심이므로 기본은 꺼짐이다.
+   */
+  nameSuggestions: boolean;
+  /** 줄바꿈. */
+  lineWrap: boolean;
+};
+
+export const DEFAULT_EDITOR_SETTINGS: EditorSettings = {
+  nameSuggestions: false,
+  lineWrap: true,
+};

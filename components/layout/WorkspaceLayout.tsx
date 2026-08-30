@@ -10,12 +10,14 @@ import TopBar from "@/components/layout/TopBar";
 import {
   DEFAULT_COLUMN_RATIOS,
   DEFAULT_EDITOR_ROW_RATIOS,
+  DEFAULT_EDITOR_SETTINGS,
   DUMMY_SESSION,
   MIN_COLUMN_PX,
   MIN_EDITOR_ROW_PX,
   RESIZER_PX,
   type ColumnRatios,
   type EditorRowRatios,
+  type EditorSettings,
 } from "@/lib/constants";
 
 const clamp = (value: number, min: number, max: number) =>
@@ -46,6 +48,11 @@ export default function WorkspaceLayout() {
   // 사용자가 작성한 코드. 4단계에서 미리보기로, 5단계에서 저장 계층으로 연결한다.
   const [htmlCode, setHtmlCode] = useState("");
   const [cssCode, setCssCode] = useState("");
+
+  // 에디터 설정. 5단계에서 저장 계층으로 연결한다.
+  const [editorSettings, setEditorSettings] = useState<EditorSettings>(
+    DEFAULT_EDITOR_SETTINGS,
+  );
   const [dragging, setDragging] = useState<"column" | "row" | null>(null);
 
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -107,7 +114,7 @@ export default function WorkspaceLayout() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <TopBar />
+      <TopBar settings={editorSettings} onSettingsChange={setEditorSettings} />
 
       <div
         ref={bodyRef}
@@ -156,6 +163,7 @@ export default function WorkspaceLayout() {
             language="html"
             value={htmlCode}
             onChange={setHtmlCode}
+            settings={editorSettings}
           />
 
           <RowResizer
@@ -170,6 +178,7 @@ export default function WorkspaceLayout() {
             language="css"
             value={cssCode}
             onChange={setCssCode}
+            settings={editorSettings}
           />
         </div>
 
