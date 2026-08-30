@@ -23,6 +23,10 @@ npm run dev
 
 http://localhost:3000 에서 확인합니다.
 
+### `prebuild` 스크립트에 관하여
+
+작업 경로가 exFAT 볼륨이라 macOS가 파일마다 AppleDouble 메타데이터 파일(`._*`)을 만듭니다. Turbopack은 `.next` 캐시 디렉터리의 파일명을 숫자로 파싱하므로 이 파일이 있으면 빌드가 실패합니다. `prebuild`에서 이를 정리합니다. 리눅스 환경(Vercel)에서는 대상 파일이 없어 무해하게 통과합니다.
+
 ## 디렉터리
 
 ```
