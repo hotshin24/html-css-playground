@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1600" viewBox="0 0 1200 1600" font-family="system-ui, -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif">
+  <rect width="1200" height="1600" fill="#ffffff"/>
+
+  <!-- 헤더 -->
+  <text x="64" y="55" font-size="24" font-weight="700" fill="#18181b">SHOP</text>
+  <text x="812" y="54" font-size="15" fill="#3f3f46">신상품</text>
+  <text x="900" y="54" font-size="15" fill="#3f3f46">베스트</text>
+  <text x="988" y="54" font-size="15" fill="#3f3f46">세일</text>
+  <text x="1062" y="54" font-size="15" fill="#3f3f46">문의</text>
+  <line x1="0" y1="88" x2="1200" y2="88" stroke="#e4e4e7" stroke-width="1"/>
+
+  <!-- 히어로 -->
+  <text x="64" y="262" font-size="48" font-weight="700" fill="#18181b">새로운 계절,</text>
+  <text x="64" y="322" font-size="48" font-weight="700" fill="#18181b">새로운 선택</text>
+  <text x="64" y="378" font-size="17" fill="#71717a">가을 신상품을 지금 만나보세요.</text>
+  <rect x="64" y="414" width="184" height="52" rx="26" fill="#2563eb"/>
+  <text x="156" y="446" font-size="16" font-weight="600" fill="#ffffff" text-anchor="middle">지금 둘러보기</text>
+  <rect x="640" y="160" width="496" height="340" rx="12" fill="#e4e4e7"/>
+  <circle cx="760" cy="270" r="34" fill="#d4d4d8"/>
+  <path d="M672 470 L816 320 L920 424 L1010 344 L1104 470 Z" fill="#d4d4d8"/>
+
+  <!-- 상품 목록 -->
+  <text x="64" y="712" font-size="32" font-weight="700" fill="#18181b">인기 상품</text>
+
+  <rect x="64" y="756" width="336" height="220" rx="10" fill="#f4f4f5"/>
+  <text x="64" y="1010" font-size="16" font-weight="600" fill="#18181b">니트 스웨터</text>
+  <text x="64" y="1038" font-size="15" fill="#52525b">59,000원</text>
+
+  <rect x="432" y="756" width="336" height="220" rx="10" fill="#f4f4f5"/>
+  <text x="432" y="1010" font-size="16" font-weight="600" fill="#18181b">코튼 셔츠</text>
+  <text x="432" y="1038" font-size="15" fill="#52525b">39,000원</text>
+
+  <rect x="800" y="756" width="336" height="220" rx="10" fill="#f4f4f5"/>
+  <text x="800" y="1010" font-size="16" font-weight="600" fill="#18181b">데님 팬츠</text>
+  <text x="800" y="1038" font-size="15" fill="#52525b">69,000원</text>
+
+  <rect x="64" y="1096" width="336" height="220" rx="10" fill="#f4f4f5"/>
+  <text x="64" y="1350" font-size="16" font-weight="600" fill="#18181b">울 코트</text>
+  <text x="64" y="1378" font-size="15" fill="#52525b">189,000원</text>
+
+  <rect x="432" y="1096" width="336" height="220" rx="10" fill="#f4f4f5"/>
+  <text x="432" y="1350" font-size="16" font-weight="600" fill="#18181b">레더 백</text>
+  <text x="432" y="1378" font-size="15" fill="#52525b">129,000원</text>
+
+  <rect x="800" y="1096" width="336" height="220" rx="10" fill="#f4f4f5"/>
+  <text x="800" y="1350" font-size="16" font-weight="600" fill="#18181b">스니커즈</text>
+  <text x="800" y="1378" font-size="15" fill="#52525b">89,000원</text>
+
+  <!-- 푸터 -->
+  <rect x="0" y="1450" width="1200" height="150" fill="#fafafa"/>
+  <line x1="0" y1="1450" x2="1200" y2="1450" stroke="#e4e4e7" stroke-width="1"/>
+  <text x="600" y="1530" font-size="14" fill="#71717a" text-anchor="middle">© 2026 SHOP. All rights reserved.</text>
+</svg>
