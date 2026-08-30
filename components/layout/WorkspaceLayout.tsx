@@ -56,6 +56,9 @@ export default function WorkspaceLayout() {
   // 그대로 두면 기본 비율로 한 번 그렸다가 저장값으로 튀는 것이 보인다.
   const [hydrated, setHydrated] = useState(false);
 
+  // 가장 최근 저장의 성공 여부. 세 대상이 같은 저장소를 쓰므로 하나로 묶어 본다.
+  const [saveFailed, setSaveFailed] = useState(false);
+
   const bodyRef = useRef<HTMLDivElement>(null);
   const editorColumnRef = useRef<HTMLDivElement>(null);
 
@@ -99,7 +102,9 @@ export default function WorkspaceLayout() {
     if (!hydrated) return;
 
     const timer = setTimeout(() => {
-      void saveDraft(DUMMY_SESSION.sectionId, { html: htmlCode, css: cssCode });
+      void saveDraft(DUMMY_SESSION.sectionId, { html: htmlCode, css: cssCode }).then(
+        (ok) => setSaveFailed(!ok),
+      );
     }, SAVE_DEBOUNCE_MS);
 
     return () => clearTimeout(timer);
@@ -110,7 +115,7 @@ export default function WorkspaceLayout() {
     if (!hydrated) return;
 
     const timer = setTimeout(() => {
-      void saveLayout({ columns, editorRows });
+      void saveLayout({ columns, editorRows }).then((ok) => setSaveFailed(!ok));
     }, SAVE_DEBOUNCE_MS);
 
     return () => clearTimeout(timer);
@@ -119,7 +124,7 @@ export default function WorkspaceLayout() {
   // 설정은 토글 시점에 바로 저장한다.
   useEffect(() => {
     if (!hydrated) return;
-    void saveEditorSettings(editorSettings);
+    void saveEditorSettings(editorSettings).then((ok) => setSaveFailed(!ok));
   }, [hydrated, editorSettings]);
 
   const endDrag = () => setDragging(null);
@@ -174,7 +179,11 @@ export default function WorkspaceLayout() {
 
   return (
     <div className={`flex min-h-0 flex-1 flex-col ${hydrated ? "" : "invisible"}`}>
-      <TopBar settings={editorSettings} onSettingsChange={setEditorSettings} />
+      <TopBar
+        settings={editorSettings}
+        onSettingsChange={setEditorSettings}
+        saveFailed={saveFailed}
+      />
 
       <div
         ref={bodyRef}

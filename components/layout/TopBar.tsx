@@ -6,13 +6,19 @@ import { DUMMY_SESSION, type EditorSettings } from "@/lib/constants";
 type TopBarProps = {
   settings: EditorSettings;
   onSettingsChange: (settings: EditorSettings) => void;
+  /** 가장 최근 저장이 실패했는지 여부. */
+  saveFailed: boolean;
 };
 
 /**
  * 학습 화면 상단 바.
  * 구역·시도 표시는 1단계에서 더미 값이며, 소스 등록·구역 편집 화면이 생기면 교체한다.
  */
-export default function TopBar({ settings, onSettingsChange }: TopBarProps) {
+export default function TopBar({
+  settings,
+  onSettingsChange,
+  saveFailed,
+}: TopBarProps) {
   const { sectionIndex, sectionTotal, sectionName, attemptUsed, attemptTotal } =
     DUMMY_SESSION;
 
@@ -23,6 +29,21 @@ export default function TopBar({ settings, onSettingsChange }: TopBarProps) {
       </span>
 
       <div className="flex items-center gap-3">
+        {/*
+          저장 실패는 사용자가 즉시 취할 수 있는 조치가 없으므로 흐름을 끊지 않는다.
+          다만 저장되고 있다고 믿은 채 작업을 잃는 상황은 막아야 하므로 조용히 알린다.
+        */}
+        {saveFailed && (
+          <span
+            role="status"
+            aria-live="polite"
+            title="브라우저 저장소에 쓸 수 없습니다. 새로고침하면 작성 중인 코드가 사라집니다."
+            className="text-xs text-chrome-warning"
+          >
+            저장되지 않음
+          </span>
+        )}
+
         <span className="text-sm text-chrome-muted">
           시도 {attemptUsed}/{attemptTotal}
         </span>

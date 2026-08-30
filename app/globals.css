@@ -13,6 +13,7 @@
   --chrome-muted: #71717a;
   --chrome-accent: #2563eb;
   --chrome-handle: #d4d4d8;
+  --chrome-warning: #b45309;
 
   /* 에디터 색. CodeMirror 테마에서 var()로 참조하므로
      테마를 바꿀 때 이 값만 교체하면 된다. */
@@ -41,6 +42,7 @@
   --color-chrome-muted: var(--chrome-muted);
   --color-chrome-accent: var(--chrome-accent);
   --color-chrome-handle: var(--chrome-handle);
+  --color-chrome-warning: var(--chrome-warning);
 }
 
 html,
