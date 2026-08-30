@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import EditorPane from "@/components/editor/EditorPane";
 import ColumnResizer from "@/components/layout/ColumnResizer";
 import FeedbackPanel from "@/components/layout/FeedbackPanel";
@@ -8,6 +8,9 @@ import PaneHeader from "@/components/layout/PaneHeader";
 import RowResizer from "@/components/layout/RowResizer";
 import TopBar from "@/components/layout/TopBar";
 import PreviewFrame from "@/components/preview/PreviewFrame";
+import { loadDraft, saveDraft } from "@/lib/storage/draftStore";
+import { loadLayout, saveLayout } from "@/lib/storage/layoutStore";
+import { loadEditorSettings, saveEditorSettings } from "@/lib/storage/settingsStore";
 import {
   DEFAULT_COLUMN_RATIOS,
   DEFAULT_EDITOR_ROW_RATIOS,
@@ -16,6 +19,7 @@ import {
   MIN_COLUMN_PX,
   MIN_EDITOR_ROW_PX,
   RESIZER_PX,
+  SAVE_DEBOUNCE_MS,
   type ColumnRatios,
   type EditorRowRatios,
   type EditorSettings,
@@ -47,12 +51,76 @@ export default function WorkspaceLayout() {
   );
   const [dragging, setDragging] = useState<"column" | "row" | null>(null);
 
+  // 저장값 복원이 끝나기 전에는 화면을 보여주지 않는다.
+  // 저장 계층이 비동기라 복원은 첫 페인트 이후에 끝나고,
+  // 그대로 두면 기본 비율로 한 번 그렸다가 저장값으로 튀는 것이 보인다.
+  const [hydrated, setHydrated] = useState(false);
+
   const bodyRef = useRef<HTMLDivElement>(null);
   const editorColumnRef = useRef<HTMLDivElement>(null);
 
   // 드래그를 시작한 시점의 비율. 이동량은 이 값을 기준으로 계산한다.
   const columnSnapshot = useRef<ColumnRatios>(DEFAULT_COLUMN_RATIOS);
   const rowSnapshot = useRef<EditorRowRatios>(DEFAULT_EDITOR_ROW_RATIOS);
+
+  // 마운트 후에 저장값을 읽는다. 서버 렌더링 결과는 항상 기본값이므로
+  // 여기서 상태를 바꿔도 하이드레이션 불일치가 생기지 않는다.
+  useEffect(() => {
+    let cancelled = false;
+
+    const restore = async () => {
+      const [layout, settings, draft] = await Promise.all([
+        loadLayout(),
+        loadEditorSettings(),
+        loadDraft(DUMMY_SESSION.sectionId),
+      ]);
+      if (cancelled) return;
+
+      if (layout) {
+        setColumns(layout.columns);
+        setEditorRows(layout.editorRows);
+      }
+      setEditorSettings(settings);
+      if (draft) {
+        setHtmlCode(draft.html);
+        setCssCode(draft.css);
+      }
+      setHydrated(true);
+    };
+
+    void restore();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // 작성 코드 자동 저장. 복원 전에는 기본값으로 덮어쓰지 않도록 막는다.
+  useEffect(() => {
+    if (!hydrated) return;
+
+    const timer = setTimeout(() => {
+      void saveDraft(DUMMY_SESSION.sectionId, { html: htmlCode, css: cssCode });
+    }, SAVE_DEBOUNCE_MS);
+
+    return () => clearTimeout(timer);
+  }, [hydrated, htmlCode, cssCode]);
+
+  // 레이아웃 비율 저장. 드래그 중에는 디바운스로 묶여 한 번만 기록된다.
+  useEffect(() => {
+    if (!hydrated) return;
+
+    const timer = setTimeout(() => {
+      void saveLayout({ columns, editorRows });
+    }, SAVE_DEBOUNCE_MS);
+
+    return () => clearTimeout(timer);
+  }, [hydrated, columns, editorRows]);
+
+  // 설정은 토글 시점에 바로 저장한다.
+  useEffect(() => {
+    if (!hydrated) return;
+    void saveEditorSettings(editorSettings);
+  }, [hydrated, editorSettings]);
 
   const endDrag = () => setDragging(null);
 
@@ -105,7 +173,7 @@ export default function WorkspaceLayout() {
   };
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className={`flex min-h-0 flex-1 flex-col ${hydrated ? "" : "invisible"}`}>
       <TopBar settings={editorSettings} onSettingsChange={setEditorSettings} />
 
       <div

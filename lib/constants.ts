@@ -12,6 +12,8 @@ export const DUMMY_SESSION = {
   sectionName: "히어로",
   attemptUsed: 2,
   attemptTotal: 3,
+  /** 작성 코드를 구역별로 저장하기 위한 식별자. */
+  sectionId: "demo-sec-01",
   designImageSrc: "/sample-design.svg",
 } as const;
 
@@ -38,6 +40,9 @@ export const RESIZER_KEY_STEP_PX = 16;
 
 /** 타이핑이 멈춘 뒤 미리보기를 갱신하기까지의 대기 시간(ms). */
 export const PREVIEW_DEBOUNCE_MS = 300;
+
+/** 변경이 멈춘 뒤 저장하기까지의 대기 시간(ms). */
+export const SAVE_DEBOUNCE_MS = 500;
 
 /** 에디터 설정. 설정 패널의 토글 두 개에 대응한다. */
 export type EditorSettings = {
