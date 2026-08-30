@@ -1,12 +1,13 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
+import { useRef, useState } from "react";
 import EditorPane from "@/components/editor/EditorPane";
 import ColumnResizer from "@/components/layout/ColumnResizer";
 import FeedbackPanel from "@/components/layout/FeedbackPanel";
 import PaneHeader from "@/components/layout/PaneHeader";
 import RowResizer from "@/components/layout/RowResizer";
 import TopBar from "@/components/layout/TopBar";
+import PreviewFrame from "@/components/preview/PreviewFrame";
 import {
   DEFAULT_COLUMN_RATIOS,
   DEFAULT_EDITOR_ROW_RATIOS,
@@ -22,15 +23,6 @@ import {
 
 const clamp = (value: number, min: number, max: number) =>
   Math.min(Math.max(value, min), max);
-
-/** 내용이 아직 없는 영역의 자리 표시. */
-function PanePlaceholder({ children }: { children: ReactNode }) {
-  return (
-    <div className="flex min-h-0 flex-1 items-center justify-center">
-      <p className="text-sm text-chrome-muted">{children}</p>
-    </div>
-  );
-}
 
 /**
  * 학습 화면 전체 골격.
@@ -192,7 +184,9 @@ export default function WorkspaceLayout() {
         {/* 3열 — 실시간 결과 화면 */}
         <section className="flex min-w-0 flex-col bg-chrome-panel">
           <PaneHeader>결과 화면</PaneHeader>
-          <PanePlaceholder>미리보기 준비 중</PanePlaceholder>
+          <div className="min-h-0 flex-1">
+            <PreviewFrame html={htmlCode} css={cssCode} />
+          </div>
         </section>
       </div>
 

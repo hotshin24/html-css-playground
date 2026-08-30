@@ -36,6 +36,9 @@ export const RESIZER_PX = 6;
 /** 키보드 방향키로 리사이저를 움직일 때의 이동량(px). */
 export const RESIZER_KEY_STEP_PX = 16;
 
+/** 타이핑이 멈춘 뒤 미리보기를 갱신하기까지의 대기 시간(ms). */
+export const PREVIEW_DEBOUNCE_MS = 300;
+
 /** 에디터 설정. 설정 패널의 토글 두 개에 대응한다. */
 export type EditorSettings = {
   /**
