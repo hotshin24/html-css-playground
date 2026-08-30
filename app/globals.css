@@ -13,6 +13,21 @@
   --chrome-muted: #71717a;
   --chrome-accent: #2563eb;
   --chrome-handle: #d4d4d8;
+
+  /* 에디터 색. CodeMirror 테마에서 var()로 참조하므로
+     테마를 바꿀 때 이 값만 교체하면 된다. */
+  --editor-bg: #ffffff;
+  --editor-text: #18181b;
+  --editor-gutter: #a1a1aa;
+  --editor-active-line: #f4f4f5;
+  --editor-selection: #bfdbfe;
+  --editor-tag: #1d4ed8;
+  --editor-attribute: #7c3aed;
+  --editor-string: #15803d;
+  --editor-comment: #71717a;
+  --editor-property: #0e7490;
+  --editor-value: #b45309;
+  --editor-punctuation: #71717a;
 }
 
 /* inline 옵션을 쓰면 유틸리티가 var() 참조를 그대로 사용하므로,

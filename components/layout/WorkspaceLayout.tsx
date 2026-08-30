@@ -1,8 +1,10 @@
 "use client";
 
 import { useRef, useState, type ReactNode } from "react";
+import EditorPane from "@/components/editor/EditorPane";
 import ColumnResizer from "@/components/layout/ColumnResizer";
 import FeedbackPanel from "@/components/layout/FeedbackPanel";
+import PaneHeader from "@/components/layout/PaneHeader";
 import RowResizer from "@/components/layout/RowResizer";
 import TopBar from "@/components/layout/TopBar";
 import {
@@ -18,15 +20,6 @@ import {
 
 const clamp = (value: number, min: number, max: number) =>
   Math.min(Math.max(value, min), max);
-
-/** 각 영역 상단의 이름 표시줄. */
-function PaneHeader({ children }: { children: ReactNode }) {
-  return (
-    <div className="flex h-8 shrink-0 items-center border-b border-chrome-border bg-chrome-subtle px-3 text-xs font-medium text-chrome-muted">
-      {children}
-    </div>
-  );
-}
 
 /** 내용이 아직 없는 영역의 자리 표시. */
 function PanePlaceholder({ children }: { children: ReactNode }) {
@@ -49,6 +42,10 @@ export default function WorkspaceLayout() {
     DEFAULT_EDITOR_ROW_RATIOS,
   );
   const [feedbackExpanded, setFeedbackExpanded] = useState(false);
+
+  // 사용자가 작성한 코드. 4단계에서 미리보기로, 5단계에서 저장 계층으로 연결한다.
+  const [htmlCode, setHtmlCode] = useState("");
+  const [cssCode, setCssCode] = useState("");
   const [dragging, setDragging] = useState<"column" | "row" | null>(null);
 
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -154,10 +151,12 @@ export default function WorkspaceLayout() {
             gridTemplateRows: `${editorRows[0]}fr ${RESIZER_PX}px ${editorRows[1]}fr`,
           }}
         >
-          <section className="flex min-h-0 flex-col bg-chrome-panel">
-            <PaneHeader>HTML</PaneHeader>
-            <PanePlaceholder>에디터 준비 중</PanePlaceholder>
-          </section>
+          <EditorPane
+            label="HTML"
+            language="html"
+            value={htmlCode}
+            onChange={setHtmlCode}
+          />
 
           <RowResizer
             label="HTML과 CSS 에디터 사이 경계"
@@ -166,10 +165,12 @@ export default function WorkspaceLayout() {
             onDragEnd={endDrag}
           />
 
-          <section className="flex min-h-0 flex-col bg-chrome-panel">
-            <PaneHeader>CSS</PaneHeader>
-            <PanePlaceholder>에디터 준비 중</PanePlaceholder>
-          </section>
+          <EditorPane
+            label="CSS"
+            language="css"
+            value={cssCode}
+            onChange={setCssCode}
+          />
         </div>
 
         <ColumnResizer
