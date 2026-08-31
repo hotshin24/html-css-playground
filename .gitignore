@@ -42,3 +42,6 @@ next-env.d.ts
 
 # claude code
 .claude/
+
+# AI 분석 응답 캐시 (개발용)
+.analysis-cache/

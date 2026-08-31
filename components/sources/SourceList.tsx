@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { runStructureAnalysis } from "@/lib/ai/runStructureAnalysis";
 import {
   deleteSource,
   listSources,
@@ -21,9 +22,15 @@ const MODE_LABEL = { whole: "통짜", sectioned: "구역별" } as const;
 function SourceCard({
   source,
   onDelete,
+  onAnalyze,
+  analyzing,
+  error,
 }: {
   source: StoredSource;
   onDelete: (id: string) => void;
+  onAnalyze: (source: StoredSource) => void;
+  analyzing: boolean;
+  error: string | null;
 }) {
   // 렌더 중에 만들고 정리만 효과에 맡긴다.
   const thumbnailUrl = useMemo(
@@ -50,15 +57,22 @@ function SourceCard({
         </p>
         <p className="mt-2 text-xs text-chrome-muted">{STAGE_LABEL[source.stage]}</p>
 
+        {analyzing && (
+          <p className="mt-1 text-xs text-chrome-muted">
+            시안의 구조와 구역을 읽고 있습니다. 수 초 걸립니다.
+          </p>
+        )}
+        {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+
         <div className="mt-3 flex items-center gap-2">
           {source.stage === "structure-pending" && (
             <button
               type="button"
-              disabled
-              title="AI 분석 연동 준비 중입니다."
+              onClick={() => onAnalyze(source)}
+              disabled={analyzing}
               className="rounded-md bg-chrome-accent px-3 py-1.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-chrome-handle"
             >
-              분석 시작
+              {analyzing ? "분석 중…" : "분석 시작"}
             </button>
           )}
           {source.stage === "sections-pending" && (
@@ -95,6 +109,8 @@ function SourceCard({
 export default function SourceList() {
   const [sources, setSources] = useState<StoredSource[] | null>(null);
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
+  const [analyzingId, setAnalyzingId] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -105,6 +121,29 @@ export default function SourceList() {
       cancelled = true;
     };
   }, []);
+
+  const handleAnalyze = async (source: StoredSource) => {
+    setAnalyzingId(source.id);
+    setErrors((current) => {
+      const next = { ...current };
+      delete next[source.id];
+      return next;
+    });
+
+    const outcome = await runStructureAnalysis(source);
+    setAnalyzingId(null);
+
+    if (!outcome.ok) {
+      // 등록 시점에 조건이 부실하면 학습 내내 영향을 받으므로 화면에 알린다.
+      setErrors((current) => ({ ...current, [source.id]: outcome.error }));
+      return;
+    }
+
+    setSources(
+      (current) =>
+        current?.map((entry) => (entry.id === outcome.source.id ? outcome.source : entry)) ?? null,
+    );
+  };
 
   const handleDelete = async (id: string) => {
     await deleteSource(id);
@@ -160,7 +199,14 @@ export default function SourceList() {
                 </div>
               </li>
             ) : (
-              <SourceCard key={source.id} source={source} onDelete={setPendingDelete} />
+              <SourceCard
+                key={source.id}
+                source={source}
+                onDelete={setPendingDelete}
+                onAnalyze={(target) => void handleAnalyze(target)}
+                analyzing={analyzingId === source.id}
+                error={errors[source.id] ?? null}
+              />
             ),
           )}
         </ul>
