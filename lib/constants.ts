@@ -10,7 +10,6 @@ export const DUMMY_SESSION = {
   sectionIndex: 2,
   sectionTotal: 5,
   sectionName: "히어로",
-  attemptUsed: 2,
   attemptTotal: 3,
   /** 작성 코드를 구역별로 저장하기 위한 식별자. */
   sectionId: "demo-sec-01",

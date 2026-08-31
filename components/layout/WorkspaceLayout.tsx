@@ -3,11 +3,19 @@
 import { useEffect, useRef, useState } from "react";
 import EditorPane from "@/components/editor/EditorPane";
 import ColumnResizer from "@/components/layout/ColumnResizer";
-import FeedbackPanel from "@/components/layout/FeedbackPanel";
+import FeedbackPanel, { type FeedbackState } from "@/components/layout/FeedbackPanel";
 import PaneHeader from "@/components/layout/PaneHeader";
 import RowResizer from "@/components/layout/RowResizer";
 import TopBar from "@/components/layout/TopBar";
 import PreviewFrame from "@/components/preview/PreviewFrame";
+import {
+  buildDemoSections,
+  DEMO_CURRENT_SECTION_ID,
+  DEMO_MAIN_TITLE_SECTION_ID,
+  DEMO_RECOMMENDED,
+} from "@/lib/judging/demoSession";
+import { buildFailureFeedback } from "@/lib/judging/feedback";
+import { judgeSection } from "@/lib/judging/judge";
 import { loadDraft, saveDraft } from "@/lib/storage/draftStore";
 import { loadLayout, saveLayout } from "@/lib/storage/layoutStore";
 import { loadEditorSettings, saveEditorSettings } from "@/lib/storage/settingsStore";
@@ -58,6 +66,10 @@ export default function WorkspaceLayout() {
 
   // 가장 최근 저장의 성공 여부. 세 대상이 같은 저장소를 쓰므로 하나로 묶어 본다.
   const [saveFailed, setSaveFailed] = useState(false);
+
+  // 판정 상태. 진행 상태 저장은 3단계에서 저장 계층에 연결한다.
+  const [attemptsUsed, setAttemptsUsed] = useState(0);
+  const [feedbackState, setFeedbackState] = useState<FeedbackState>({ phase: "idle" });
 
   const bodyRef = useRef<HTMLDivElement>(null);
   const editorColumnRef = useRef<HTMLDivElement>(null);
@@ -127,6 +139,64 @@ export default function WorkspaceLayout() {
     void saveEditorSettings(editorSettings).then((ok) => setSaveFailed(!ok));
   }, [hydrated, editorSettings]);
 
+  const judging = feedbackState.phase === "judging";
+  const finished = feedbackState.phase === "passed" || feedbackState.phase === "revealed";
+
+  /** 확인 버튼. 판정하고 결과를 하단 패널에 표시한다. */
+  const handleSubmit = async () => {
+    if (judging || finished) return;
+
+    setFeedbackState({ phase: "judging" });
+    setFeedbackExpanded(true);
+
+    const attempt = attemptsUsed + 1;
+    setAttemptsUsed(attempt);
+
+    const sections = buildDemoSections(htmlCode, cssCode);
+    const result = await judgeSection({
+      sections,
+      currentSectionId: DEMO_CURRENT_SECTION_ID,
+      mainTitleSectionId: DEMO_MAIN_TITLE_SECTION_ID,
+      required: [],
+      recommended: DEMO_RECOMMENDED,
+    });
+
+    const shared = {
+      recommended: result.recommended,
+      substitutedSectionIds: result.substitutedSectionIds,
+    };
+
+    if (result.passed) {
+      setFeedbackState({ phase: "passed", ...shared });
+      return;
+    }
+
+    const feedback = buildFailureFeedback(
+      result.outcomes,
+      [],
+      attempt,
+      DUMMY_SESSION.attemptTotal,
+    );
+
+    if (attempt >= DUMMY_SESSION.attemptTotal) {
+      const currentSection = sections.find((section) => section.id === DEMO_CURRENT_SECTION_ID);
+      setFeedbackState({
+        phase: "revealed",
+        feedback,
+        example: currentSection?.example ?? { html: "", css: "" },
+        ...shared,
+      });
+      return;
+    }
+
+    setFeedbackState({
+      phase: "failed",
+      feedback,
+      attemptsLeft: DUMMY_SESSION.attemptTotal - attempt,
+      ...shared,
+    });
+  };
+
   const endDrag = () => setDragging(null);
 
   const startColumnDrag = () => {
@@ -183,6 +253,11 @@ export default function WorkspaceLayout() {
         settings={editorSettings}
         onSettingsChange={setEditorSettings}
         saveFailed={saveFailed}
+        attemptsUsed={attemptsUsed}
+        canSubmit={!judging && !finished}
+        onSubmit={() => {
+          void handleSubmit();
+        }}
       />
 
       <div
@@ -270,6 +345,7 @@ export default function WorkspaceLayout() {
       <FeedbackPanel
         expanded={feedbackExpanded}
         onToggle={() => setFeedbackExpanded((previous) => !previous)}
+        state={feedbackState}
       />
     </div>
   );

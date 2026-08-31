@@ -6,21 +6,26 @@ import { DUMMY_SESSION, type EditorSettings } from "@/lib/constants";
 type TopBarProps = {
   settings: EditorSettings;
   onSettingsChange: (settings: EditorSettings) => void;
-  /** 가장 최근 저장이 실패했는지 여부. */
   saveFailed: boolean;
+  attemptsUsed: number;
+  /** 판정 중이거나 이미 끝난 구역이면 비활성. */
+  canSubmit: boolean;
+  onSubmit: () => void;
 };
 
 /**
  * 학습 화면 상단 바.
- * 구역·시도 표시는 1단계에서 더미 값이며, 소스 등록·구역 편집 화면이 생기면 교체한다.
+ * 구역 표시는 아직 더미 값이며, 소스 등록·구역 편집 화면이 생기면 교체한다.
  */
 export default function TopBar({
   settings,
   onSettingsChange,
   saveFailed,
+  attemptsUsed,
+  canSubmit,
+  onSubmit,
 }: TopBarProps) {
-  const { sectionIndex, sectionTotal, sectionName, attemptUsed, attemptTotal } =
-    DUMMY_SESSION;
+  const { sectionIndex, sectionTotal, sectionName, attemptTotal } = DUMMY_SESSION;
 
   return (
     <header className="flex h-12 shrink-0 items-center justify-between border-b border-chrome-border bg-chrome-panel px-4">
@@ -45,16 +50,16 @@ export default function TopBar({
         )}
 
         <span className="text-sm text-chrome-muted">
-          시도 {attemptUsed}/{attemptTotal}
+          시도 {attemptsUsed}/{attemptTotal}
         </span>
 
         <SettingsPopover settings={settings} onChange={onSettingsChange} />
 
-        {/* 판정 로직은 다음 단계 범위이므로 비활성 상태로 둔다. */}
         <button
           type="button"
-          disabled
-          className="rounded-md bg-chrome-accent px-4 py-1.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-chrome-handle"
+          onClick={onSubmit}
+          disabled={!canSubmit}
+          className="rounded-md bg-chrome-accent px-4 py-1.5 text-sm font-medium text-white hover:brightness-110 disabled:cursor-not-allowed disabled:bg-chrome-handle disabled:hover:brightness-100"
         >
           확인
         </button>
