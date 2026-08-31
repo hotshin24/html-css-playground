@@ -138,8 +138,24 @@ const CASES: Case[] = [
     expect: (r) => !r.ok && rejectedCondition(r, "invalid-main-title-section"),
   },
   {
-    name: "필수 조건이 하나도 남지 않은 구역은 전체를 거부한다",
+    name: "필수 조건이 없어도 최상위 제목 구역부터는 통과시킨다",
+    // 저작권 문구만 있는 푸터처럼 화이트리스트에 걸리는 것이 없는 구역이 있다.
+    // 그런 구역도 엔진 상시 조건은 결합 문서에서 검사받는다.
     input: analysis([{ id: "r8", level: "recommended", type: "semantic-suggestion", desc: "권장" }]),
+    expect: (r) =>
+      r.ok &&
+      r.issues.some((issue) => issue.code === "no-required-condition" && !issue.rejected),
+  },
+  {
+    name: "최상위 제목 구역보다 앞선 구역에 필수 조건이 없으면 거부한다",
+    // 그 구간은 엔진 상시 조건도 건너뛰므로 무엇을 작성해도 통과한다.
+    input: {
+      mainTitleSectionId: "sec-02",
+      sections: [
+        { id: "sec-01", order: 1, rubric: [] },
+        { id: "sec-02", order: 2, rubric: [VALID_LIST_GROUPING] },
+      ],
+    },
     expect: (r) => !r.ok && rejectedCondition(r, "no-required-condition"),
   },
   {

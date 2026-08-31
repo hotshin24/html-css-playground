@@ -269,23 +269,36 @@ export function validateAnalysis(input: unknown): ValidationResult {
     sections.push({ id: sectionId, order, required, recommended });
   });
 
-  // 필수 조건이 하나도 남지 않은 구역은 무엇을 작성해도 통과하므로 오류다.
-  for (const section of sections) {
-    if (section.required.length === 0) {
-      issues.push({
-        code: "no-required-condition",
-        scope: "section",
-        rejected: true,
-        message: "필수 조건이 하나도 남지 않았습니다.",
-        sectionId: section.id,
-      });
-    }
-  }
-
   // 문서 전체 범위 조건의 검사 시작 구역 (F-02-16, F-08-10).
   const mainTitleSectionId = asString(input.mainTitleSectionId);
-  const mainTitleExists =
-    mainTitleSectionId !== null && sections.some((section) => section.id === mainTitleSectionId);
+  const mainTitleSection = sections.find((section) => section.id === mainTitleSectionId);
+  const mainTitleExists = mainTitleSection !== undefined;
+
+  /*
+   * 필수 조건이 없는 구역은 그 자체로 오류가 아니다.
+   * 저작권 문구만 있는 푸터처럼 화이트리스트에 걸리는 것이 없는 구역이 실제로
+   * 존재하며, 그런 구역도 엔진 상시 조건(heading-single, heading-order)은
+   * 결합 문서에서 검사받는다.
+   *
+   * 문제가 되는 것은 최상위 제목 구역보다 앞선 구역이다. 그 구간은 엔진 상시
+   * 조건도 건너뛰므로(F-08-10) 조건이 하나도 없으면 무엇을 작성해도 통과한다.
+   */
+  for (const section of sections) {
+    if (section.required.length > 0) continue;
+
+    const beforeMainTitle =
+      mainTitleSection !== undefined && section.order < mainTitleSection.order;
+
+    issues.push({
+      code: "no-required-condition",
+      scope: "section",
+      rejected: beforeMainTitle,
+      message: beforeMainTitle
+        ? "최상위 제목 구역보다 앞선 구역에 필수 조건이 없어 무엇을 작성해도 통과합니다."
+        : "필수 조건이 없습니다. 문서 전체 범위 조건만 검사합니다.",
+      sectionId: section.id,
+    });
+  }
 
   if (!mainTitleExists) {
     issues.push({

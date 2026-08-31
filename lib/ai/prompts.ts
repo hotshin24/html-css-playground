@@ -14,7 +14,7 @@ import { buildPromptConditionTypeTable } from "@/lib/judging/conditionTypes";
  * 분석 응답 캐시의 키에 들어간다. 프롬프트를 고치면 이 값을 올려야
  * 이전 응답이 재사용되지 않는다.
  */
-export const PROMPT_VERSION = "2026-08-31.1";
+export const PROMPT_VERSION = "2026-08-31.2";
 
 /** 1단계 — 구조 분석. */
 export const STRUCTURE_SYSTEM_PROMPT = `당신은 웹 디자인 시안을 분석해 콘텐츠의 의미 구조와 배치 관계를 추출합니다.
@@ -137,7 +137,15 @@ export function buildConditionSystemPrompt(): string {
   );
 }
 
-const CONDITION_SYSTEM_PROMPT_TEMPLATE = `당신은 웹 디자인 시안의 구조 분석 결과를 받아 학습자 코드의 판정 조건을 생성합니다.
+const CONDITION_SYSTEM_PROMPT_TEMPLATE = `당신은 웹 디자인 시안을 보고 학습자 코드의 판정 조건을 생성합니다.
+
+## 입력
+
+시안 이미지 전체와 **확정된 구역 목록**을 받습니다. 각 구역에는 이미지 세로 범위(\`topRatio\`, \`heightRatio\`)가 있습니다. 이미지 맨 위가 0, 맨 아래가 1입니다.
+
+**각 구역의 조건은 그 범위 안에 보이는 내용만으로 만드십시오.** 다른 구역의 요소가 섞이면 학습자가 작성하지도 않을 것을 요구하게 되어 어떻게 작성해도 통과할 수 없습니다.
+
+1단계 구조 분석 결과를 참고 자료로 함께 제공합니다. 다만 **사용자가 구역을 병합하거나 나눴을 수 있어 구조 트리와 실제 범위가 어긋날 수 있습니다.** 어긋나는 경우 이미지를 기준으로 삼으십시오. 예를 들어 구조 트리에 항목이 6개로 적혀 있어도 해당 구역 범위 안에 3개만 보인다면 3개로 판단하십시오.
 
 ## 가장 중요한 규칙
 
@@ -261,6 +269,12 @@ JSON 객체 하나만 출력하십시오. 설명, 머리말, 마크다운 코드
     }
   ]
 }`;
+
+export const CONDITION_USER_PROMPT =
+  "첨부한 시안과 아래 구역 목록을 보고 각 구역의 판정 조건을 생성하십시오.";
+
+export const EXAMPLE_USER_PROMPT =
+  "아래 판정 조건을 만족하는 구역별 모범 예시 코드를 작성하십시오.";
 
 /** 3단계 — 모범 예시 생성. */
 export const EXAMPLE_SYSTEM_PROMPT = `당신은 확정된 판정 조건을 만족하는 HTML/CSS 예시를 작성합니다.

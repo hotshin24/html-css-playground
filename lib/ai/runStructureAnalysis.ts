@@ -68,7 +68,7 @@ export async function runStructureAnalysis(source: StoredSource): Promise<Analys
 
   const analysis = payload.analysis;
 
-  const sections: StoredSection[] = analysis.sections.map((section, index) => ({
+  const analyzed: StoredSection[] = analysis.sections.map((section, index) => ({
     id: section.id,
     name: section.name,
     order: index + 1,
@@ -81,11 +81,30 @@ export async function runStructureAnalysis(source: StoredSource): Promise<Analys
     example: { html: "", css: "" },
   }));
 
+  // 통짜 모드는 시안 전체가 한 구역이다 (PRD 6.6). 구역 편집 화면을 거치지
+  // 않으므로 분석이 나눈 구역을 여기서 하나로 합친다.
+  const sections: StoredSection[] =
+    source.settings.mode === "whole"
+      ? [
+          {
+            ...analyzed[0],
+            id: "sec-01",
+            name: source.title,
+            order: 1,
+            bounds: { topRatio: 0, heightRatio: 1 },
+            sameStructureAs: null,
+            structure: { role: "페이지 전체", children: analyzed.map((entry) => entry.structure) },
+          },
+        ]
+      : analyzed;
+
   const updated: StoredSource = {
     ...source,
     stage: "sections-pending",
     reference: analysis.reference,
-    mainTitleSectionId: analysis.mainTitleSectionId,
+    // 통짜 모드는 구역이 하나뿐이므로 그 구역이 검사 시작 지점이다.
+    mainTitleSectionId:
+      source.settings.mode === "whole" ? "sec-01" : analysis.mainTitleSectionId,
     sections,
   };
 

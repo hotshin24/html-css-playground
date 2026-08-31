@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { runConditionGeneration } from "@/lib/ai/runConditionGeneration";
 import {
   isContiguous,
   mergeWithNext,
@@ -199,20 +200,34 @@ export default function SectionEditor({ sourceId }: { sourceId: string }) {
       example: { html: "", css: "" },
     }));
 
-    const saved = await saveSource({
-      ...source,
-      sections: confirmed,
-      // 최상위 제목 구역이 병합·분할로 사라졌으면 비운다. 재확인이 필요하다.
-      mainTitleSectionId: sections.some((section) => section.id === source.mainTitleSectionId)
-        ? source.mainTitleSectionId
-        : null,
-    });
+    // 최상위 제목 구역이 병합·분할로 사라졌으면 첫 구역으로 되돌린다.
+    // 값이 비면 문서 전체 범위 조건을 적용할 지점이 사라진다 (F-08-10).
+    const mainTitleSectionId = sections.some((section) => section.id === source.mainTitleSectionId)
+      ? source.mainTitleSectionId
+      : (confirmed[0]?.id ?? null);
 
-    setSaving(false);
+    const confirmedSource = { ...source, sections: confirmed, mainTitleSectionId };
+    const saved = await saveSource(confirmedSource);
     if (!saved) {
+      setSaving(false);
       setError("구역을 저장하지 못했습니다.");
       return;
     }
+
+    // 확정된 구역으로 조건과 예시를 만든다 (F-02-17).
+    const outcome = await runConditionGeneration(confirmedSource);
+    setSaving(false);
+
+    if (!outcome.ok) {
+      const rejected = outcome.issues.filter((issue) => issue.rejected);
+      setError(
+        rejected.length > 0
+          ? `${outcome.error} (거부된 조건 ${rejected.length}건: ${rejected.map((issue) => issue.message).join(" / ")})`
+          : outcome.error,
+      );
+      return;
+    }
+
     router.push("/");
   };
 
@@ -227,13 +242,18 @@ export default function SectionEditor({ sourceId }: { sourceId: string }) {
         </div>
         <div className="flex items-center gap-3">
           <span className="text-sm text-chrome-muted">{sections.length}개 구역</span>
+          {saving && (
+            <span className="text-xs text-chrome-muted">
+              확정한 구역으로 판정 조건과 모범 예시를 만듭니다. 수십 초 걸립니다.
+            </span>
+          )}
           <button
             type="button"
             onClick={() => void handleConfirm()}
             disabled={saving}
             className="rounded-md bg-chrome-accent px-4 py-1.5 text-sm font-medium text-white disabled:bg-chrome-handle"
           >
-            {saving ? "저장 중…" : "구역 확정"}
+            {saving ? "조건 만드는 중…" : "구역 확정"}
           </button>
         </div>
       </header>
