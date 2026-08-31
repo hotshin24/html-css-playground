@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import EditorPane from "@/components/editor/EditorPane";
 import ColumnResizer from "@/components/layout/ColumnResizer";
+import DesignPane from "@/components/layout/DesignPane";
 import FeedbackPanel from "@/components/layout/FeedbackPanel";
 import PaneHeader from "@/components/layout/PaneHeader";
 import RowResizer from "@/components/layout/RowResizer";
@@ -52,6 +53,13 @@ export default function WorkspaceLayout({ designImageSrc, session }: WorkspaceLa
     DEFAULT_EDITOR_SETTINGS,
   );
   const [dragging, setDragging] = useState<"column" | "row" | null>(null);
+
+  // 통짜 모드는 구역 강조가 없다 (PRD 5.4). 구역별 모드에서만 경계를 넘긴다.
+  const currentBounds =
+    session.source?.settings.mode === "sectioned"
+      ? (session.source.sections.find((section) => section.id === session.sectionId)?.bounds ??
+        null)
+      : null;
 
   // 저장값 복원이 끝나기 전에는 화면을 보여주지 않는다.
   // 저장 계층이 비동기라 복원은 첫 페인트 이후에 끝나고,
@@ -191,15 +199,11 @@ export default function WorkspaceLayout({ designImageSrc, session }: WorkspaceLa
         {/* 1열 — 시안 */}
         <section className="flex min-h-0 min-w-0 flex-col bg-chrome-panel">
           <PaneHeader>시안</PaneHeader>
-          <div className="min-h-0 flex-1 overflow-auto p-3">
-            {/* 향후 사용자가 업로드한 이미지를 Blob URL로 표시하므로 next/image를 쓰지 않는다. */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={designImageSrc}
-              alt="학습 시안"
-              className="w-full"
-            />
-          </div>
+          <DesignPane
+            imageSrc={designImageSrc}
+            bounds={currentBounds}
+            sectionId={session.sectionId}
+          />
         </section>
 
         <ColumnResizer
