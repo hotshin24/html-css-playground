@@ -276,7 +276,9 @@ export default function SectionEditor({ sourceId }: { sourceId: string }) {
             sections={sections}
             selectedIndex={selectedIndex}
             onSelect={setSelectedIndex}
-            onMoveBoundary={(index, ratio) => setSections(moveBoundary(sections, index, ratio))}
+            onMoveBoundary={(index, ratio) =>
+              setSections(moveBoundary(sections, index, ratio, source.source.height))
+            }
           />
         </div>
 
@@ -284,6 +286,14 @@ export default function SectionEditor({ sourceId }: { sourceId: string }) {
           <p className="text-xs text-chrome-muted">
             AI가 나눈 결과입니다. 그대로 진행해도 되고, 조정할 수도 있습니다.
           </p>
+
+          {/* 구조 분석이 남긴 주의 사항. 조용히 알리고 진행을 막지는 않는다. */}
+          {source.analysisWarning && (
+            <p className="mt-2 text-xs leading-relaxed text-chrome-warning">
+              {source.analysisWarning} 구역이 많으면 하나씩 작성하는 데 시간이 오래 걸립니다.
+              비슷한 구역을 병합해 수를 줄이거나, 시안을 나눠 등록하는 편이 낫습니다.
+            </p>
+          )}
 
           <ol className="mt-3 space-y-1">
             {sections.map((section, index) => (
@@ -341,7 +351,7 @@ export default function SectionEditor({ sourceId }: { sourceId: string }) {
                 </button>
                 <button
                   type="button"
-                  onClick={() => apply(splitSection(sections, selectedIndex))}
+                  onClick={() => apply(splitSection(sections, selectedIndex, source.source.height))}
                   className="w-full rounded-md border border-chrome-border px-3 py-1.5 text-sm"
                 >
                   가운데서 나누기

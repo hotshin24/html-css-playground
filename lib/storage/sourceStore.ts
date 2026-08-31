@@ -74,6 +74,8 @@ export type StoredSource = {
   };
   /** 학습자에게 보조 정보로 표시. 판정에는 쓰지 않는다. */
   reference: unknown;
+  /** 구조 분석이 남긴 주의 사항. 구역이 너무 많을 때 등. 없으면 null. */
+  analysisWarning: string | null;
   mainTitleSectionId: string | null;
   sections: StoredSection[];
   progress: {
@@ -113,6 +115,7 @@ export async function createSource(input: NewSourceInput): Promise<StoredSource 
       maxAttempts: input.maxAttempts,
     },
     reference: null,
+    analysisWarning: null,
     mainTitleSectionId: null,
     sections: [],
     progress: { currentSection: null, sections: {} },

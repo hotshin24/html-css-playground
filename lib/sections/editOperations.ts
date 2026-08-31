@@ -13,8 +13,20 @@ export type EditableSection = {
   structure: unknown;
 };
 
-/** 구역이 가질 수 있는 최소 높이. 시안 세로의 2%. */
-export const MIN_HEIGHT_RATIO = 0.02;
+/**
+ * 구역이 가질 수 있는 최소 높이(시안 픽셀).
+ *
+ * 비율로 두면 시안이 길수록 최소 높이가 함께 커진다. 세로 22590px 시안에서
+ * 2%는 452px이라, AI가 낸 얇은 띠 구역 주변에서는 경계 드래그가 아무 반응 없이
+ * 무시됐다. 시안 길이와 무관한 값이어야 한다.
+ */
+export const MIN_HEIGHT_PX = 40;
+
+/** 이 시안에서 최소 높이가 차지하는 비율. */
+function minRatioOf(designHeight: number): number {
+  if (designHeight <= 0) return 0;
+  return MIN_HEIGHT_PX / designHeight;
+}
 
 function createSectionId(): string {
   return `sec-${Math.random().toString(36).slice(2, 8)}`;
@@ -58,13 +70,15 @@ export function moveBoundary(
   sections: EditableSection[],
   index: number,
   ratio: number,
+  designHeight: number,
 ): EditableSection[] {
   const upper = sections[index];
   const lower = sections[index + 1];
   if (!upper || !lower) return sections;
 
-  const min = upper.bounds.topRatio + MIN_HEIGHT_RATIO;
-  const max = bottomOf(lower) - MIN_HEIGHT_RATIO;
+  const minRatio = minRatioOf(designHeight);
+  const min = upper.bounds.topRatio + minRatio;
+  const max = bottomOf(lower) - minRatio;
   if (min > max) return sections;
 
   const boundary = clamp(ratio, min, max);
@@ -137,14 +151,17 @@ export function mergeWithNext(
 export function splitSection(
   sections: EditableSection[],
   index: number,
+  designHeight: number,
   ratio?: number,
 ): EditableSection[] {
   const target = sections[index];
   if (!target) return sections;
-  if (target.bounds.heightRatio < MIN_HEIGHT_RATIO * 2) return sections;
 
-  const min = target.bounds.topRatio + MIN_HEIGHT_RATIO;
-  const max = bottomOf(target) - MIN_HEIGHT_RATIO;
+  const minRatio = minRatioOf(designHeight);
+  if (target.bounds.heightRatio < minRatio * 2) return sections;
+
+  const min = target.bounds.topRatio + minRatio;
+  const max = bottomOf(target) - minRatio;
   const boundary = clamp(
     ratio ?? target.bounds.topRatio + target.bounds.heightRatio / 2,
     min,

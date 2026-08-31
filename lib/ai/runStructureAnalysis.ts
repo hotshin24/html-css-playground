@@ -102,6 +102,7 @@ export async function runStructureAnalysis(source: StoredSource): Promise<Analys
     ...source,
     stage: "sections-pending",
     reference: analysis.reference,
+    analysisWarning: analysis.warning,
     // 통짜 모드는 구역이 하나뿐이므로 그 구역이 검사 시작 지점이다.
     mainTitleSectionId:
       source.settings.mode === "whole" ? "sec-01" : analysis.mainTitleSectionId,

@@ -2,7 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useState } from "react";
-import { formatBytes, prepareDesignImage, type PreparedImage } from "@/lib/image/prepareDesignImage";
+import {
+  formatBytes,
+  MAX_ASPECT_RATIO,
+  prepareDesignImage,
+  type PreparedImage,
+} from "@/lib/image/prepareDesignImage";
 import { createSource, type LearningMode } from "@/lib/storage/sourceStore";
 
 const ACCEPTED_TYPES = ["image/png", "image/jpeg"];
@@ -81,7 +86,7 @@ export default function SourceForm() {
     router.push("/");
   };
 
-  const canSubmit = Boolean(prepared) && agreed && !saving;
+  const canSubmit = Boolean(prepared) && !prepared?.tooTall && agreed && !saving;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -121,6 +126,15 @@ export default function SourceForm() {
                 브라우저 저장 공간을 아끼기 위해 가로 1600px로 줄이고 WebP로 변환합니다. 시맨틱과
                 레이아웃 판단에는 영향이 없습니다.
               </dd>
+              {prepared.tooTall && (
+                <dd className="mt-3 max-w-xs leading-relaxed text-chrome-warning">
+                  이 시안은 가로에 비해 세로가 너무 깁니다 (가로 1 : 세로{" "}
+                  {(prepared.originalHeight / prepared.originalWidth).toFixed(1)}). 분석에 쓰는
+                  모델이 긴 그림을 줄여서 보기 때문에, 세로가 가로의 {MAX_ASPECT_RATIO}배를 넘으면
+                  글자를 읽지 못해 구역과 구조를 잘못 잡습니다. 페이지를 몇 부분으로 잘라 나눠
+                  등록해 주세요.
+                </dd>
+              )}
             </dl>
           </div>
         )}
