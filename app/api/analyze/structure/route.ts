@@ -13,6 +13,14 @@ import {
 } from "@/lib/ai/prompts";
 import { cacheKey, readCache, writeCache } from "@/lib/ai/responseCache";
 
+/**
+ * 함수 최대 실행 시간(초).
+ *
+ * 명시하지 않으면 기본값이 이 호출보다 짧아 배포에서만 끊긴다.
+ * 구조 분석은 실측 15~18초라 여유를 두고 잡는다.
+ */
+export const maxDuration = 60;
+
 export type StructureAnalysis = {
   warning: string | null;
   mainTitleSectionId: string | null;
@@ -59,6 +67,7 @@ function looksLikeStructure(value: unknown): value is StructureAnalysis {
 }
 
 export async function POST(request: Request) {
+  const startedAt = Date.now();
   let body: RequestBody;
   try {
     body = (await request.json()) as RequestBody;
@@ -73,7 +82,7 @@ export async function POST(request: Request) {
   const key = cacheKey("structure", STRUCTURE_PROMPT_VERSION, body.image + (body.variant ?? ""));
   const cached = await readCache<StructureAnalysis>(key);
   if (cached) {
-    return Response.json({ analysis: cached, cached: true, attempts: 0 });
+    return Response.json({ analysis: cached, cached: true, attempts: 0, elapsedMs: 0 });
   }
 
   const result = await askForJson<unknown>({
@@ -94,5 +103,10 @@ export async function POST(request: Request) {
   }
 
   await writeCache(key, result.value);
-  return Response.json({ analysis: result.value, cached: false, attempts: result.attempts });
+  return Response.json({
+    analysis: result.value,
+    cached: false,
+    attempts: result.attempts,
+    elapsedMs: Date.now() - startedAt,
+  });
 }

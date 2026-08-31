@@ -15,6 +15,14 @@ import {
 } from "@/lib/ai/prompts";
 import { cacheKey, readCache, writeCache } from "@/lib/ai/responseCache";
 
+/**
+ * 함수 최대 실행 시간(초).
+ *
+ * 2단계와 3단계를 이어 부르므로 가장 오래 걸리는 호출이다. 실측 50~60초.
+ * 명시하지 않으면 기본값이 이보다 짧아 배포에서만 끊긴다.
+ */
+export const maxDuration = 300;
+
 type SectionInput = {
   id: string;
   name: string;
@@ -64,6 +72,7 @@ export async function POST(request: Request) {
   }
 
   const sectionsPayload = JSON.stringify({ sections: body.sections }, null, 2);
+  const startedAt = Date.now();
 
   // 2단계 — 판정 조건
   const variant = body.variant ?? "";
@@ -88,6 +97,8 @@ export async function POST(request: Request) {
     rubric = result.value as RubricResponse;
     await writeCache(rubricKey, rubric);
   }
+
+  const conditionsDoneAt = Date.now();
 
   // 3단계 — 모범 예시. 조건이 먼저 확정되어야 예시가 조건에 종속되지 않는다.
   const rubricPayload = JSON.stringify(rubric, null, 2);
@@ -116,5 +127,11 @@ export async function POST(request: Request) {
     rubric,
     examples,
     attempts: { conditions: rubricAttempts, examples: exampleAttempts },
+    // 배포 환경의 함수 실행 시간 한도를 가늠하기 위해 단계별로 나눠 돌려준다.
+    elapsedMs: {
+      conditions: conditionsDoneAt - startedAt,
+      examples: Date.now() - conditionsDoneAt,
+      total: Date.now() - startedAt,
+    },
   });
 }
