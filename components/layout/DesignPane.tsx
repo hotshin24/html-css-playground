@@ -19,7 +19,11 @@ type DesignPaneProps = {
   sectionId: string | null;
 };
 
-export default function DesignPane({ imageSrc, bounds, sectionId }: DesignPaneProps) {
+export default function DesignPane({
+  imageSrc,
+  bounds,
+  sectionId,
+}: DesignPaneProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
@@ -41,7 +45,8 @@ export default function DesignPane({ imageSrc, bounds, sectionId }: DesignPanePr
     if (!scroller || !image || !box || image.offsetHeight === 0) return;
 
     pendingRef.current = false;
-    const offset = box.offsetTop - (scroller.clientHeight - box.offsetHeight) / 2;
+    const offset =
+      box.offsetTop - (scroller.clientHeight - box.offsetHeight) / 2;
     // 부드러운 스크롤은 직후의 배치 변화(이미지 디코드 완료 등)에 취소된다.
     scroller.scrollTop = Math.max(0, offset);
   }, []);
@@ -56,40 +61,48 @@ export default function DesignPane({ imageSrc, bounds, sectionId }: DesignPanePr
   const heightPercent = bounds ? bounds.heightRatio * 100 : 100;
 
   return (
-    <div ref={scrollRef} className="min-h-0 flex-1 overflow-auto p-3">
-      <div className="relative">
-        {/* 사용자가 등록한 이미지를 Blob URL로 표시하므로 next/image를 쓰지 않는다. */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          ref={imageRef}
-          src={imageSrc}
-          alt="학습 시안"
-          className="block w-full"
-          // 첫 진입에는 위 효과가 돌 때 이미지 크기가 아직 0이다. 로드가 끝나야 정해진다.
-          onLoad={scrollToSection}
-        />
+    // 시안도 대개 밝은 배경이라 미리보기와 같은 문제를 갖는다. 3열과 동일한
+    // 프레임을 둘러 "양쪽은 참조 대상, 가운데는 작업 영역"으로 읽히게 한다.
+    <div className="min-h-0 flex-1 p-3">
+      <div className="h-full overflow-hidden rounded-lg border border-chrome-border bg-chrome-bg p-2">
+        <div ref={scrollRef} className="h-full overflow-auto rounded-md">
+          <div className="relative">
+            {/* 사용자가 등록한 이미지를 Blob URL로 표시하므로 next/image를 쓰지 않는다. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              ref={imageRef}
+              src={imageSrc}
+              alt="학습 시안"
+              className="block w-full"
+              // 첫 진입에는 위 효과가 돌 때 이미지 크기가 아직 0이다. 로드가 끝나야 정해진다.
+              onLoad={scrollToSection}
+            />
 
-        {bounds ? (
-          <>
-            {/* 현재 구역 위아래를 덮어 가린다. 이미지를 지우지 않고 흐리게만 한다. */}
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-x-0 top-0 bg-chrome-panel/70"
-              style={{ height: `${topPercent}%` }}
-            />
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-x-0 bottom-0 bg-chrome-panel/70"
-              style={{ height: `${Math.max(0, 100 - topPercent - heightPercent)}%` }}
-            />
-            <div
-              ref={boxRef}
-              aria-hidden
-              className="pointer-events-none absolute inset-x-0 border-y-2 border-chrome-accent"
-              style={{ top: `${topPercent}%`, height: `${heightPercent}%` }}
-            />
-          </>
-        ) : null}
+            {bounds ? (
+              <>
+                {/* 현재 구역 위아래를 덮어 가린다. 이미지를 지우지 않고 흐리게만 한다. */}
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute inset-x-0 top-0 bg-chrome-panel/70"
+                  style={{ height: `${topPercent}%` }}
+                />
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute inset-x-0 bottom-0 bg-chrome-panel/70"
+                  style={{
+                    height: `${Math.max(0, 100 - topPercent - heightPercent)}%`,
+                  }}
+                />
+                <div
+                  ref={boxRef}
+                  aria-hidden
+                  className="pointer-events-none absolute inset-x-0 border-y-2 border-chrome-accent"
+                  style={{ top: `${topPercent}%`, height: `${heightPercent}%` }}
+                />
+              </>
+            ) : null}
+          </div>
+        </div>
       </div>
     </div>
   );

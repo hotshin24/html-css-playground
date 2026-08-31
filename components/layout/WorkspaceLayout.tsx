@@ -11,7 +11,10 @@ import TopBar from "@/components/layout/TopBar";
 import PreviewFrame from "@/components/preview/PreviewFrame";
 import type { LearningSession } from "@/lib/learning/useLearningSession";
 import { loadLayout, saveLayout } from "@/lib/storage/layoutStore";
-import { loadEditorSettings, saveEditorSettings } from "@/lib/storage/settingsStore";
+import {
+  loadEditorSettings,
+  saveEditorSettings,
+} from "@/lib/storage/settingsStore";
 import {
   DEFAULT_COLUMN_RATIOS,
   DEFAULT_EDITOR_ROW_RATIOS,
@@ -40,13 +43,15 @@ type WorkspaceLayoutProps = {
  * 열 너비와 에디터 높이는 px가 아니라 비율로 들고 있다.
  * 창 크기가 달라져도 배분이 유지되고, 5단계에서 저장·복원할 때도 그대로 쓸 수 있다.
  */
-export default function WorkspaceLayout({ designImageSrc, session }: WorkspaceLayoutProps) {
+export default function WorkspaceLayout({
+  designImageSrc,
+  session,
+}: WorkspaceLayoutProps) {
   const [columns, setColumns] = useState<ColumnRatios>(DEFAULT_COLUMN_RATIOS);
   const [editorRows, setEditorRows] = useState<EditorRowRatios>(
     DEFAULT_EDITOR_ROW_RATIOS,
   );
   const [feedbackExpanded, setFeedbackExpanded] = useState(false);
-
 
   // 에디터 설정. 5단계에서 저장 계층으로 연결한다.
   const [editorSettings, setEditorSettings] = useState<EditorSettings>(
@@ -57,8 +62,9 @@ export default function WorkspaceLayout({ designImageSrc, session }: WorkspaceLa
   // 통짜 모드는 구역 강조가 없다 (PRD 5.4). 구역별 모드에서만 경계를 넘긴다.
   const currentBounds =
     session.source?.settings.mode === "sectioned"
-      ? (session.source.sections.find((section) => section.id === session.sectionId)?.bounds ??
-        null)
+      ? (session.source.sections.find(
+          (section) => section.id === session.sectionId,
+        )?.bounds ?? null)
       : null;
 
   // 저장값 복원이 끝나기 전에는 화면을 보여주지 않는다.
@@ -68,7 +74,6 @@ export default function WorkspaceLayout({ designImageSrc, session }: WorkspaceLa
 
   // 가장 최근 저장의 성공 여부. 세 대상이 같은 저장소를 쓰므로 하나로 묶어 본다.
   const [saveFailed, setSaveFailed] = useState(false);
-
 
   const bodyRef = useRef<HTMLDivElement>(null);
   const editorColumnRef = useRef<HTMLDivElement>(null);
@@ -83,7 +88,10 @@ export default function WorkspaceLayout({ designImageSrc, session }: WorkspaceLa
     let cancelled = false;
 
     const restore = async () => {
-      const [layout, settings] = await Promise.all([loadLayout(), loadEditorSettings()]);
+      const [layout, settings] = await Promise.all([
+        loadLayout(),
+        loadEditorSettings(),
+      ]);
       if (cancelled) return;
 
       if (layout) {
@@ -159,7 +167,8 @@ export default function WorkspaceLayout({ designImageSrc, session }: WorkspaceLa
   };
 
   const dragRow = (deltaPx: number) => {
-    const areaHeight = (editorColumnRef.current?.clientHeight ?? 0) - RESIZER_PX;
+    const areaHeight =
+      (editorColumnRef.current?.clientHeight ?? 0) - RESIZER_PX;
     if (areaHeight <= 0) return;
 
     const start = rowSnapshot.current;
@@ -174,7 +183,9 @@ export default function WorkspaceLayout({ designImageSrc, session }: WorkspaceLa
   };
 
   return (
-    <div className={`flex min-h-0 flex-1 flex-col ${hydrated ? "" : "invisible"}`}>
+    <div
+      className={`flex min-h-0 flex-1 flex-col ${hydrated ? "" : "invisible"}`}
+    >
       <TopBar
         settings={editorSettings}
         onSettingsChange={setEditorSettings}
@@ -255,8 +266,15 @@ export default function WorkspaceLayout({ designImageSrc, session }: WorkspaceLa
         {/* 3열 — 실시간 결과 화면 */}
         <section className="flex min-h-0 min-w-0 flex-col bg-chrome-panel">
           <PaneHeader>결과 화면</PaneHeader>
-          <div className="min-h-0 flex-1">
-            <PreviewFrame html={session.html} css={session.css} />
+          {/* 미리보기는 학습자 CSS만 적용된 상태여야 하므로 내부에 아무것도 주입하지
+              않는다. 대신 바깥에 어두운 프레임을 둘러 흰 배경이 창 안의 페이지로
+              읽히게 한다. 1열 시안도 같은 프레임을 써서 두 열이 참조 대상임을 보인다. */}
+          <div className="min-h-0 flex-1 p-3">
+            <div className="h-full overflow-hidden rounded-lg border border-chrome-border bg-chrome-bg p-2">
+              <div className="h-full overflow-hidden rounded-md">
+                <PreviewFrame html={session.html} css={session.css} />
+              </div>
+            </div>
           </div>
         </section>
       </div>
