@@ -1,5 +1,6 @@
 import CheckCases from "@/components/dev/CheckCases";
 import CombinedCases from "@/components/dev/CombinedCases";
+import FeedbackCases from "@/components/dev/FeedbackCases";
 import FrameCases from "@/components/dev/FrameCases";
 import SchemaCases from "@/components/dev/SchemaCases";
 import { buildPromptConditionTypeTable } from "@/lib/judging/conditionTypes";
@@ -20,6 +21,7 @@ export default function VerifyPage() {
       <FrameCases />
       <CheckCases />
       <CombinedCases />
+      <FeedbackCases />
 
       <section className="mt-8">
         <h2 className="text-base font-medium">프롬프트 주입 텍스트</h2>
