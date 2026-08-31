@@ -11,7 +11,7 @@ import {
   CONDITION_USER_PROMPT,
   EXAMPLE_SYSTEM_PROMPT,
   EXAMPLE_USER_PROMPT,
-  PROMPT_VERSION,
+  CONDITION_PROMPT_VERSION,
 } from "@/lib/ai/prompts";
 import { cacheKey, readCache, writeCache } from "@/lib/ai/responseCache";
 
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
 
   // 2단계 — 판정 조건
   const variant = body.variant ?? "";
-  const rubricKey = cacheKey("conditions", PROMPT_VERSION, body.image + sectionsPayload + variant);
+  const rubricKey = cacheKey("conditions", CONDITION_PROMPT_VERSION, body.image + sectionsPayload + variant);
   let rubric = await readCache<RubricResponse>(rubricKey);
   let rubricAttempts = 0;
 
@@ -91,7 +91,7 @@ export async function POST(request: Request) {
 
   // 3단계 — 모범 예시. 조건이 먼저 확정되어야 예시가 조건에 종속되지 않는다.
   const rubricPayload = JSON.stringify(rubric, null, 2);
-  const exampleKey = cacheKey("examples", PROMPT_VERSION, rubricPayload + variant);
+  const exampleKey = cacheKey("examples", CONDITION_PROMPT_VERSION, rubricPayload + variant);
   let examples = await readCache<ExampleResponse>(exampleKey);
   let exampleAttempts = 0;
 

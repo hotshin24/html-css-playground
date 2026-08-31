@@ -6,7 +6,11 @@
  */
 
 import { askForJson } from "@/lib/ai/client";
-import { PROMPT_VERSION, STRUCTURE_SYSTEM_PROMPT, STRUCTURE_USER_PROMPT } from "@/lib/ai/prompts";
+import {
+  STRUCTURE_PROMPT_VERSION,
+  STRUCTURE_SYSTEM_PROMPT,
+  STRUCTURE_USER_PROMPT,
+} from "@/lib/ai/prompts";
 import { cacheKey, readCache, writeCache } from "@/lib/ai/responseCache";
 
 export type StructureAnalysis = {
@@ -66,7 +70,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "이미지가 없거나 지원하지 않는 형식입니다." }, { status: 400 });
   }
 
-  const key = cacheKey("structure", PROMPT_VERSION, body.image + (body.variant ?? ""));
+  const key = cacheKey("structure", STRUCTURE_PROMPT_VERSION, body.image + (body.variant ?? ""));
   const cached = await readCache<StructureAnalysis>(key);
   if (cached) {
     return Response.json({ analysis: cached, cached: true, attempts: 0 });

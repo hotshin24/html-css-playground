@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AI_RUNS } from "@/fixtures/aiRuns";
+import { AI_RUNS, type AiRun } from "@/fixtures/aiRuns";
+import { AI_RUNS_IMPROVED } from "@/fixtures/aiRunsImproved";
 import { SOLUTIONS } from "@/fixtures/solutions";
 import { VIOLATIONS } from "@/fixtures/violations";
 import type { SectionInput } from "@/lib/judging/combined";
@@ -38,7 +39,7 @@ function failedTypes(result: JudgeResult): string[] {
   return result.outcomes.filter((outcome) => !outcome.passed).map((outcome) => outcome.type);
 }
 
-async function runOne(run: (typeof AI_RUNS)[number]): Promise<RunReport | null> {
+async function runOne(run: AiRun): Promise<RunReport | null> {
   const validated = validateAnalysis({
     mainTitleSectionId: SECTION_ID,
     sections: [{ id: SECTION_ID, order: 1, rubric: run.rubric }],
@@ -102,14 +103,22 @@ async function runOne(run: (typeof AI_RUNS)[number]): Promise<RunReport | null> 
   };
 }
 
-export default function AiVerificationRun() {
+function Report({
+  title,
+  note,
+  runs,
+}: {
+  title: string;
+  note: string;
+  runs: AiRun[];
+}) {
   const [reports, setReports] = useState<RunReport[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const collected: RunReport[] = [];
-      for (const run of AI_RUNS) {
+      for (const run of runs) {
         const report = await runOne(run);
         if (report) collected.push(report);
       }
@@ -118,12 +127,12 @@ export default function AiVerificationRun() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [runs]);
 
   if (!reports) {
     return (
       <section className="mt-8">
-        <h2 className="text-base font-medium">AI 조건으로 재측정</h2>
+        <h2 className="text-base font-medium">{title}</h2>
         <p className="mt-1 text-sm text-chrome-muted">판정 중…</p>
       </section>
     );
@@ -157,10 +166,8 @@ export default function AiVerificationRun() {
 
   return (
     <section className="mt-8">
-      <h2 className="text-base font-medium">AI 조건으로 재측정 (PRD 8.2)</h2>
-      <p className="mt-1 text-sm text-chrome-muted">
-        같은 시안을 3회 분석해 받은 조건으로 정답 4벌 · 예시 1벌 · 위반 8건을 판정합니다.
-      </p>
+      <h2 className="text-base font-medium">{title}</h2>
+      <p className="mt-1 text-sm text-chrome-muted">{note}</p>
 
       <ul className="mt-3 space-y-1 text-sm">
         <li>
@@ -235,5 +242,22 @@ export default function AiVerificationRun() {
         </tbody>
       </table>
     </section>
+  );
+}
+
+export default function AiVerificationRun() {
+  return (
+    <>
+      <Report
+        title="AI 조건으로 재측정 — 개선 전 (PRD 8.2)"
+        note="layout-result 대상 단위 지시를 넣기 전. 정답 4벌 · 예시 1벌 · 위반 8건을 회차마다 판정합니다."
+        runs={AI_RUNS}
+      />
+      <Report
+        title="AI 조건으로 재측정 — 개선 후"
+        note="반복 항목이 있으면 그 항목을 layout-result 대상으로 삼도록 지시를 추가한 뒤."
+        runs={AI_RUNS_IMPROVED}
+      />
+    </>
   );
 }
