@@ -4,6 +4,7 @@ import FeedbackCases from "@/components/dev/FeedbackCases";
 import FrameCases from "@/components/dev/FrameCases";
 import SchemaCases from "@/components/dev/SchemaCases";
 import SolutionPreviews from "@/components/dev/SolutionPreviews";
+import VerificationRun from "@/components/dev/VerificationRun";
 import { buildPromptConditionTypeTable } from "@/lib/judging/conditionTypes";
 
 /**
@@ -23,6 +24,7 @@ export default function VerifyPage() {
       <CheckCases />
       <CombinedCases />
       <FeedbackCases />
+      <VerificationRun />
       <SolutionPreviews />
 
       <section className="mt-8">
