@@ -1,34 +1,45 @@
 @import "tailwindcss";
 
 /* 앱 크롬(작업 화면 UI)의 색 정의.
-   현재는 라이트 값만 두되, 향후 테마 교체 시 이 변수 값만 바꾸면 되도록
-   하드코딩하지 않고 CSS 변수로 관리한다.
-   iframe 미리보기 내부에는 이 스타일이 전달되지 않는다. */
+   하드코딩하지 않고 CSS 변수로 관리하므로 테마 교체 시 이 값만 바꾸면 된다.
+   iframe 미리보기 내부에는 이 스타일이 전달되지 않는다. 미리보기는 학습자
+   CSS만 적용된 상태를 보여야 하므로 의도적으로 그렇게 둔다. */
 :root {
-  --chrome-bg: #f4f4f5;
-  --chrome-panel: #ffffff;
-  --chrome-subtle: #fafafa;
-  --chrome-border: #e4e4e7;
-  --chrome-text: #18181b;
-  --chrome-muted: #71717a;
-  --chrome-accent: #2563eb;
-  --chrome-handle: #d4d4d8;
-  --chrome-warning: #b45309;
+  --chrome-bg: #1a1917;
+  --chrome-panel: #232220;
+  --chrome-subtle: #2b2926;
+  --chrome-border: #3d3a34;
+  --chrome-text: #ede9e3;
+  --chrome-muted: #a09a91;
+  --chrome-accent: #d97757;
+  /* 강조색 위에 얹는 글자. 웜 오렌지 위의 흰 글자는 대비 3.1로 AA에 못 미치고,
+     어두운 글자는 5.6으로 통과한다. */
+  --chrome-on-accent: #1a1917;
+  --chrome-handle: #4a463f;
+  --chrome-warning: #e0a458;
+  /* 판정 결과 색. 라이트 기준의 red-600·green-700은 어두운 배경에서 각각
+     3.3·3.2로 AA에 못 미쳐 밝은 쪽으로 올렸다. */
+  --chrome-danger: #f08a7a;
+  --chrome-success: #7fc98a;
+  /* 파괴적 동작 버튼 배경. 패널 대비 3.2, 흰 글자 대비 4.9. */
+  --chrome-danger-strong: #c04a37;
 
   /* 에디터 색. CodeMirror 테마에서 var()로 참조하므로
-     테마를 바꿀 때 이 값만 교체하면 된다. */
-  --editor-bg: #ffffff;
-  --editor-text: #18181b;
-  --editor-gutter: #a1a1aa;
-  --editor-active-line: #f4f4f5;
-  --editor-selection: #bfdbfe;
-  --editor-tag: #1d4ed8;
-  --editor-attribute: #7c3aed;
-  --editor-string: #15803d;
-  --editor-comment: #71717a;
-  --editor-property: #0e7490;
-  --editor-value: #b45309;
-  --editor-punctuation: #71717a;
+     테마를 바꿀 때 이 값만 교체하면 된다.
+     토큰 6종은 배경 대비 4.5 이상이고, 유채색끼리는 색상각이 최소 43° 벌어져
+     명도가 비슷해도 서로 구분된다. 주석만 무채색으로 빼 코드와 분리한다. */
+  --editor-bg: #1e1d1b;
+  --editor-text: #ede9e3;
+  --editor-gutter: #7a746c;
+  --editor-active-line: #272522;
+  --editor-selection: #3f4a5c;
+  --editor-tag: #7fb3e8;
+  --editor-attribute: #cfa0f0;
+  --editor-string: #93cd93;
+  --editor-comment: #8d867d;
+  --editor-property: #5fcfb8;
+  --editor-value: #e8b171;
+  --editor-punctuation: #8d867d;
 }
 
 /* inline 옵션을 쓰면 유틸리티가 var() 참조를 그대로 사용하므로,
@@ -41,8 +52,12 @@
   --color-chrome-text: var(--chrome-text);
   --color-chrome-muted: var(--chrome-muted);
   --color-chrome-accent: var(--chrome-accent);
+  --color-chrome-on-accent: var(--chrome-on-accent);
   --color-chrome-handle: var(--chrome-handle);
   --color-chrome-warning: var(--chrome-warning);
+  --color-chrome-danger: var(--chrome-danger);
+  --color-chrome-success: var(--chrome-success);
+  --color-chrome-danger-strong: var(--chrome-danger-strong);
 }
 
 html,

@@ -100,7 +100,7 @@ export default function TopBar({
           type="button"
           onClick={onSubmit}
           disabled={!canSubmit}
-          className="rounded-md bg-chrome-accent px-4 py-1.5 text-sm font-medium text-white hover:brightness-110 disabled:cursor-not-allowed disabled:bg-chrome-handle disabled:hover:brightness-100"
+          className="rounded-md bg-chrome-accent px-4 py-1.5 text-sm font-medium text-chrome-on-accent hover:brightness-110 disabled:cursor-not-allowed disabled:bg-chrome-handle disabled:hover:brightness-100"
         >
           확인
         </button>

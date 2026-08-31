@@ -55,7 +55,7 @@ export const editorTheme = EditorView.theme(
       outline: "1px solid var(--editor-gutter)",
     },
   },
-  { dark: false },
+  { dark: true },
 );
 
 /** HTML/CSS 토큰 색 규칙. */
@@ -70,5 +70,5 @@ export const editorHighlightStyle = HighlightStyle.define([
   { tag: [tags.keyword, tags.atom, tags.constant(tags.name), tags.standard(tags.name)], color: "var(--editor-value)" },
   { tag: [tags.number, tags.unit, tags.color, tags.literal], color: "var(--editor-value)" },
   { tag: tags.variableName, color: "var(--editor-text)" },
-  { tag: tags.invalid, color: "#dc2626" },
+  { tag: tags.invalid, color: "#f08a7a" },
 ]);

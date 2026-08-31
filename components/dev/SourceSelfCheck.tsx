@@ -148,7 +148,7 @@ export default function SourceSelfCheck() {
               {report.title} — 구역 {report.sections.length}개 중 {failedCount}개 불합격
             </p>
             {report.schemaIssues.length > 0 ? (
-              <pre className="mt-1 text-xs text-red-700">{report.schemaIssues.join("\n")}</pre>
+              <pre className="mt-1 text-xs text-chrome-danger">{report.schemaIssues.join("\n")}</pre>
             ) : null}
             <table className="mt-2 w-full text-xs">
               <tbody>
@@ -159,11 +159,11 @@ export default function SourceSelfCheck() {
                     <td className="w-12 py-1 text-right align-top">{section.conditionCount}개</td>
                     <td className="py-1 pl-3 align-top">
                       {section.error !== null ? (
-                        <span className="text-red-700">오류: {section.error}</span>
+                        <span className="text-chrome-danger">오류: {section.error}</span>
                       ) : section.failed.length === 0 ? (
                         <span className="text-chrome-muted">통과</span>
                       ) : (
-                        <span className="text-red-700">{section.failed.join(", ")}</span>
+                        <span className="text-chrome-danger">{section.failed.join(", ")}</span>
                       )}
                     </td>
                   </tr>

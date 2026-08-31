@@ -70,7 +70,7 @@ function Overlay({
           >
             <span
               className={`m-1 inline-block rounded px-1.5 py-0.5 text-xs ${
-                selected ? "bg-chrome-accent text-white" : "bg-chrome-panel text-chrome-muted"
+                selected ? "bg-chrome-accent text-chrome-on-accent" : "bg-chrome-panel text-chrome-muted"
               }`}
             >
               {index + 1}. {section.name}
@@ -258,7 +258,7 @@ export default function SectionEditor({ sourceId }: { sourceId: string }) {
             type="button"
             onClick={() => void handleConfirm()}
             disabled={saving}
-            className="rounded-md bg-chrome-accent px-4 py-1.5 text-sm font-medium text-white disabled:bg-chrome-handle"
+            className="rounded-md bg-chrome-accent px-4 py-1.5 text-sm font-medium text-chrome-on-accent disabled:bg-chrome-handle"
           >
             {saving
               ? progress
@@ -302,7 +302,7 @@ export default function SectionEditor({ sourceId }: { sourceId: string }) {
                   type="button"
                   onClick={() => setSelectedIndex(index)}
                   className={`w-full truncate rounded-md px-2 py-1.5 text-left text-sm ${
-                    index === selectedIndex ? "bg-chrome-accent text-white" : "hover:bg-chrome-bg"
+                    index === selectedIndex ? "bg-chrome-accent text-chrome-on-accent" : "hover:bg-chrome-bg"
                   }`}
                 >
                   {index + 1}. {section.name}
@@ -361,11 +361,11 @@ export default function SectionEditor({ sourceId }: { sourceId: string }) {
           )}
 
           {!isContiguous(sections) && (
-            <p className="mt-4 text-xs text-red-600">
+            <p className="mt-4 text-xs text-chrome-danger">
               구역이 시안을 빈틈없이 덮지 못하고 있습니다.
             </p>
           )}
-          {error && <p className="mt-4 text-xs text-red-600">{error}</p>}
+          {error && <p className="mt-4 text-xs text-chrome-danger">{error}</p>}
         </aside>
       </div>
     </main>

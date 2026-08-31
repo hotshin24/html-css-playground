@@ -195,7 +195,7 @@ export default function FeedbackCases() {
     };
   }, []);
 
-  if (error) return <p className="mt-3 text-sm text-red-600">실행 실패: {error}</p>;
+  if (error) return <p className="mt-3 text-sm text-chrome-danger">실행 실패: {error}</p>;
   if (!results) return <p className="mt-3 text-sm text-chrome-muted">생성 중…</p>;
 
   const failed = results.filter((entry) => !entry.passed).length;
@@ -211,7 +211,7 @@ export default function FeedbackCases() {
       <ul className="mt-3 space-y-1.5">
         {results.map((entry) => (
           <li key={entry.name} className="text-sm">
-            <span className={entry.passed ? "text-green-700" : "text-red-600"}>
+            <span className={entry.passed ? "text-chrome-success" : "text-chrome-danger"}>
               {entry.passed ? "통과" : "실패"}
             </span>{" "}
             {entry.name}

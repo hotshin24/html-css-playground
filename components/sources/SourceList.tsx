@@ -65,7 +65,7 @@ function SourceCard({
               : "시안의 구조와 구역을 읽고 있습니다. 수 초 걸립니다."}
           </p>
         )}
-        {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+        {error && <p className="mt-1 text-xs text-chrome-danger">{error}</p>}
         {source.analysisWarning && (
           <p className="mt-1 max-w-prose text-xs leading-relaxed text-chrome-warning">
             {source.analysisWarning}
@@ -78,7 +78,7 @@ function SourceCard({
               type="button"
               onClick={() => onAnalyze(source)}
               disabled={analyzing}
-              className="rounded-md bg-chrome-accent px-3 py-1.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-chrome-handle"
+              className="rounded-md bg-chrome-accent px-3 py-1.5 text-sm font-medium text-chrome-on-accent disabled:cursor-not-allowed disabled:bg-chrome-handle"
             >
               {analyzing ? "분석 중…" : "분석 시작"}
             </button>
@@ -91,14 +91,14 @@ function SourceCard({
                 type="button"
                 onClick={() => onAnalyze(source)}
                 disabled={analyzing}
-                className="rounded-md bg-chrome-accent px-3 py-1.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-chrome-handle"
+                className="rounded-md bg-chrome-accent px-3 py-1.5 text-sm font-medium text-chrome-on-accent disabled:cursor-not-allowed disabled:bg-chrome-handle"
               >
                 {analyzing ? "조건 만드는 중…" : "조건 생성 다시 시도"}
               </button>
             ) : (
               <Link
                 href={`/sources/${source.id}/sections`}
-                className="rounded-md bg-chrome-accent px-3 py-1.5 text-sm font-medium text-white"
+                className="rounded-md bg-chrome-accent px-3 py-1.5 text-sm font-medium text-chrome-on-accent"
               >
                 구역 확인
               </Link>
@@ -106,7 +106,7 @@ function SourceCard({
           {source.stage === "ready" && (
             <Link
               href={`/sources/${source.id}/learn`}
-              className="rounded-md bg-chrome-accent px-3 py-1.5 text-sm font-medium text-white"
+              className="rounded-md bg-chrome-accent px-3 py-1.5 text-sm font-medium text-chrome-on-accent"
             >
               이어하기
             </Link>
@@ -207,7 +207,7 @@ export default function SourceList() {
           </p>
           <Link
             href="/sources/new"
-            className="mt-4 inline-block rounded-md bg-chrome-accent px-4 py-2 text-sm font-medium text-white"
+            className="mt-4 inline-block rounded-md bg-chrome-accent px-4 py-2 text-sm font-medium text-chrome-on-accent"
           >
             시안 등록
           </Link>
@@ -228,7 +228,7 @@ export default function SourceList() {
                   <button
                     type="button"
                     onClick={() => void handleDelete(source.id)}
-                    className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white"
+                    className="rounded-md bg-chrome-danger-strong px-3 py-1.5 text-sm font-medium text-white"
                   >
                     삭제
                   </button>

@@ -176,7 +176,7 @@ export default function VerificationRun() {
     };
   }, []);
 
-  if (error) return <p className="mt-3 text-sm text-red-600">실행 실패: {error}</p>;
+  if (error) return <p className="mt-3 text-sm text-chrome-danger">실행 실패: {error}</p>;
   if (!report) return <p className="mt-3 text-sm text-chrome-muted">검증 실행 중…</p>;
 
   return (
@@ -208,7 +208,7 @@ export default function VerificationRun() {
               <td className="py-1.5 pr-3 text-chrome-muted">{row.kind}</td>
               <td className="py-1.5 pr-3">{row.id}</td>
               <td className="py-1.5 pr-3 text-chrome-muted">{row.note}</td>
-              <td className={`py-1.5 ${row.ok ? "text-green-700" : "text-red-600"}`}>
+              <td className={`py-1.5 ${row.ok ? "text-chrome-success" : "text-chrome-danger"}`}>
                 {row.detail}
               </td>
             </tr>

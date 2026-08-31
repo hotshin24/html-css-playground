@@ -182,7 +182,7 @@ function Report({
         <li className={identical ? "" : "text-chrome-warning"}>
           회차 간 (type, 파라미터) 집합 {identical ? "일치" : "불일치"}
         </li>
-        <li className={flipped.length > 0 ? "text-red-600" : ""}>
+        <li className={flipped.length > 0 ? "text-chrome-danger" : ""}>
           회차에 따라 판정이 갈린 정답 코드: {flipped.length > 0 ? flipped.join(", ") : "없음"}
         </li>
       </ul>
@@ -212,7 +212,7 @@ function Report({
                 {report.solutionVerdicts.map((entry) => (
                   <span
                     key={entry.id}
-                    className={`block ${entry.passed ? "text-green-700" : "text-red-600"}`}
+                    className={`block ${entry.passed ? "text-chrome-success" : "text-chrome-danger"}`}
                   >
                     {entry.id} {entry.passed ? "통과" : `실패(${entry.failed.join(", ")})`}
                   </span>
@@ -220,7 +220,7 @@ function Report({
               </td>
               <td
                 className={`py-1.5 pr-3 ${
-                  report.exampleVerdict.passed ? "text-green-700" : "text-red-600"
+                  report.exampleVerdict.passed ? "text-chrome-success" : "text-chrome-danger"
                 }`}
               >
                 {report.exampleVerdict.passed
@@ -231,7 +231,7 @@ function Report({
                 {report.violationVerdicts.map((entry) => (
                   <span
                     key={entry.id}
-                    className={`block ${entry.caught ? "text-green-700" : "text-red-600"}`}
+                    className={`block ${entry.caught ? "text-chrome-success" : "text-chrome-danger"}`}
                   >
                     {entry.id} {entry.caught ? "잡힘" : "놓침"}
                   </span>

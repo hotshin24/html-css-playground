@@ -227,13 +227,13 @@ export default function SourceForm() {
         </label>
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-chrome-danger">{error}</p>}
 
       <div className="flex items-center gap-3">
         <button
           type="submit"
           disabled={!canSubmit}
-          className="rounded-md bg-chrome-accent px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-chrome-handle"
+          className="rounded-md bg-chrome-accent px-4 py-2 text-sm font-medium text-chrome-on-accent disabled:cursor-not-allowed disabled:bg-chrome-handle"
         >
           {saving ? "등록 중…" : "등록"}
         </button>

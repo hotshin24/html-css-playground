@@ -193,7 +193,7 @@ export default function SchemaCases() {
       <ul className="mt-3 space-y-1">
         {results.map((entry) => (
           <li key={entry.name} className="flex gap-2 text-sm">
-            <span className={entry.passed ? "text-green-700" : "text-red-600"}>
+            <span className={entry.passed ? "text-chrome-success" : "text-chrome-danger"}>
               {entry.passed ? "통과" : "실패"}
             </span>
             <span>{entry.name}</span>

@@ -13,7 +13,7 @@ export default function Home() {
         </div>
         <Link
           href="/sources/new"
-          className="shrink-0 rounded-md bg-chrome-accent px-4 py-2 text-sm font-medium text-white"
+          className="shrink-0 rounded-md bg-chrome-accent px-4 py-2 text-sm font-medium text-chrome-on-accent"
         >
           시안 등록
         </Link>
