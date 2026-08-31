@@ -233,7 +233,7 @@ export default function SourceForm() {
         <button
           type="submit"
           disabled={!canSubmit}
-          className="rounded-md bg-chrome-accent px-4 py-2 text-sm font-medium text-chrome-on-accent disabled:cursor-not-allowed disabled:bg-chrome-handle"
+          className="rounded-md bg-chrome-accent px-4 py-2 text-sm font-medium text-chrome-on-accent disabled:cursor-not-allowed disabled:bg-chrome-handle disabled:text-chrome-on-disabled"
         >
           {saving ? "등록 중…" : "등록"}
         </button>

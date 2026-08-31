@@ -58,10 +58,13 @@ function Overlay({
             key={section.id}
             onClick={() => onSelect(index)}
             aria-pressed={selected}
+            // 이 오버레이가 얹히는 대상은 크롬이 아니라 시안 이미지다. 시안은
+            // 대개 밝으므로 비선택 구역은 검정 계열로 덮어야 보인다. 크롬 색
+            // 토큰을 쓰면 다크 테마에서 밝은 워시가 되어 밝은 시안 위에서 사라진다.
             className={`absolute left-0 w-full border-y text-left transition-colors ${
               selected
-                ? "border-chrome-accent bg-chrome-accent/20"
-                : "border-chrome-border/70 bg-chrome-text/5 hover:bg-chrome-text/10"
+                ? "border-chrome-accent bg-chrome-accent/25"
+                : "border-black/25 bg-black/15 hover:bg-black/25"
             }`}
             style={{
               top: `${section.bounds.topRatio * 100}%`,
@@ -258,7 +261,7 @@ export default function SectionEditor({ sourceId }: { sourceId: string }) {
             type="button"
             onClick={() => void handleConfirm()}
             disabled={saving}
-            className="rounded-md bg-chrome-accent px-4 py-1.5 text-sm font-medium text-chrome-on-accent disabled:bg-chrome-handle"
+            className="rounded-md bg-chrome-accent px-4 py-1.5 text-sm font-medium text-chrome-on-accent disabled:bg-chrome-handle disabled:text-chrome-on-disabled"
           >
             {saving
               ? progress
@@ -337,7 +340,7 @@ export default function SectionEditor({ sourceId }: { sourceId: string }) {
                   type="button"
                   disabled={!canMergeUp}
                   onClick={() => apply(mergeWithNext(sections, selectedIndex - 1), selectedIndex - 1)}
-                  className="w-full rounded-md border border-chrome-border px-3 py-1.5 text-sm disabled:cursor-not-allowed disabled:text-chrome-handle"
+                  className="w-full rounded-md border border-chrome-border px-3 py-1.5 text-sm disabled:cursor-not-allowed disabled:border-chrome-border/50 disabled:text-chrome-on-disabled"
                 >
                   위 구역과 병합
                 </button>
@@ -345,7 +348,7 @@ export default function SectionEditor({ sourceId }: { sourceId: string }) {
                   type="button"
                   disabled={!canMergeDown}
                   onClick={() => apply(mergeWithNext(sections, selectedIndex))}
-                  className="w-full rounded-md border border-chrome-border px-3 py-1.5 text-sm disabled:cursor-not-allowed disabled:text-chrome-handle"
+                  className="w-full rounded-md border border-chrome-border px-3 py-1.5 text-sm disabled:cursor-not-allowed disabled:border-chrome-border/50 disabled:text-chrome-on-disabled"
                 >
                   아래 구역과 병합
                 </button>

@@ -78,7 +78,7 @@ function SourceCard({
               type="button"
               onClick={() => onAnalyze(source)}
               disabled={analyzing}
-              className="rounded-md bg-chrome-accent px-3 py-1.5 text-sm font-medium text-chrome-on-accent disabled:cursor-not-allowed disabled:bg-chrome-handle"
+              className="rounded-md bg-chrome-accent px-3 py-1.5 text-sm font-medium text-chrome-on-accent disabled:cursor-not-allowed disabled:bg-chrome-handle disabled:text-chrome-on-disabled"
             >
               {analyzing ? "분석 중…" : "분석 시작"}
             </button>
@@ -91,7 +91,7 @@ function SourceCard({
                 type="button"
                 onClick={() => onAnalyze(source)}
                 disabled={analyzing}
-                className="rounded-md bg-chrome-accent px-3 py-1.5 text-sm font-medium text-chrome-on-accent disabled:cursor-not-allowed disabled:bg-chrome-handle"
+                className="rounded-md bg-chrome-accent px-3 py-1.5 text-sm font-medium text-chrome-on-accent disabled:cursor-not-allowed disabled:bg-chrome-handle disabled:text-chrome-on-disabled"
               >
                 {analyzing ? "조건 만드는 중…" : "조건 생성 다시 시도"}
               </button>

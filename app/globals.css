@@ -16,6 +16,9 @@
      어두운 글자는 5.6으로 통과한다. */
   --chrome-on-accent: #1a1917;
   --chrome-handle: #4a463f;
+  /* 비활성 버튼 글자. 핸들 배경 위에서 5.0으로 읽힌다. 비활성 상태는 배경색과
+     커서로 이미 드러나므로 글자까지 흐릴 이유가 없다. */
+  --chrome-on-disabled: #c4bdb3;
   --chrome-warning: #e0a458;
   /* 판정 결과 색. 라이트 기준의 red-600·green-700은 어두운 배경에서 각각
      3.3·3.2로 AA에 못 미쳐 밝은 쪽으로 올렸다. */
@@ -27,19 +30,22 @@
   /* 에디터 색. CodeMirror 테마에서 var()로 참조하므로
      테마를 바꿀 때 이 값만 교체하면 된다.
      토큰 6종은 배경 대비 4.5 이상이고, 유채색끼리는 색상각이 최소 43° 벌어져
-     명도가 비슷해도 서로 구분된다. 주석만 무채색으로 빼 코드와 분리한다. */
+     명도가 비슷해도 서로 구분된다. 주석만 무채색으로 빼 코드와 분리한다.
+     대비는 에디터 배경뿐 아니라 활성 줄과 선택 영역 배경 위에서도 4.5를 넘어야
+     한다. 가장 어두운 주석·구두점이 그 제약을 결정했고, 선택 배경을 파랑에서
+     중성 회색으로 바꾼 것도 같은 이유다. */
   --editor-bg: #1e1d1b;
   --editor-text: #ede9e3;
-  --editor-gutter: #7a746c;
+  --editor-gutter: #a39c92;
   --editor-active-line: #272522;
-  --editor-selection: #3f4a5c;
+  --editor-selection: #3d3931;
   --editor-tag: #7fb3e8;
   --editor-attribute: #cfa0f0;
   --editor-string: #93cd93;
-  --editor-comment: #8d867d;
+  --editor-comment: #aaa398;
   --editor-property: #5fcfb8;
   --editor-value: #e8b171;
-  --editor-punctuation: #8d867d;
+  --editor-punctuation: #aaa398;
 }
 
 /* inline 옵션을 쓰면 유틸리티가 var() 참조를 그대로 사용하므로,
@@ -54,6 +60,7 @@
   --color-chrome-accent: var(--chrome-accent);
   --color-chrome-on-accent: var(--chrome-on-accent);
   --color-chrome-handle: var(--chrome-handle);
+  --color-chrome-on-disabled: var(--chrome-on-disabled);
   --color-chrome-warning: var(--chrome-warning);
   --color-chrome-danger: var(--chrome-danger);
   --color-chrome-success: var(--chrome-success);
