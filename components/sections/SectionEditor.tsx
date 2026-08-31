@@ -125,6 +125,8 @@ export default function SectionEditor({ sourceId }: { sourceId: string }) {
   const [sections, setSections] = useState<EditableSection[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [saving, setSaving] = useState(false);
+  /** 조건 생성 진행 상황. 구역마다 따로 요청하므로 몇 개가 끝났는지 알 수 있다. */
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -215,8 +217,11 @@ export default function SectionEditor({ sourceId }: { sourceId: string }) {
     }
 
     // 확정된 구역으로 조건과 예시를 만든다 (F-02-17).
-    const outcome = await runConditionGeneration(confirmedSource);
+    const outcome = await runConditionGeneration(confirmedSource, (done, total) =>
+      setProgress({ done, total }),
+    );
     setSaving(false);
+    setProgress(null);
 
     if (!outcome.ok) {
       const rejected = outcome.issues.filter((issue) => issue.rejected);
@@ -244,7 +249,9 @@ export default function SectionEditor({ sourceId }: { sourceId: string }) {
           <span className="text-sm text-chrome-muted">{sections.length}개 구역</span>
           {saving && (
             <span className="text-xs text-chrome-muted">
-              확정한 구역으로 판정 조건과 모범 예시를 만듭니다. 수십 초 걸립니다.
+              {progress
+                ? `판정 조건과 모범 예시를 만드는 중 — ${progress.done}/${progress.total} 구역`
+                : "확정한 구역으로 판정 조건과 모범 예시를 만듭니다."}
             </span>
           )}
           <button
@@ -253,7 +260,11 @@ export default function SectionEditor({ sourceId }: { sourceId: string }) {
             disabled={saving}
             className="rounded-md bg-chrome-accent px-4 py-1.5 text-sm font-medium text-white disabled:bg-chrome-handle"
           >
-            {saving ? "조건 만드는 중…" : "구역 확정"}
+            {saving
+              ? progress
+                ? `조건 만드는 중 ${progress.done}/${progress.total}`
+                : "조건 만드는 중…"
+              : "구역 확정"}
           </button>
         </div>
       </header>

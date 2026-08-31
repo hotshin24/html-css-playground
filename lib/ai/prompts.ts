@@ -18,7 +18,7 @@ import { buildPromptConditionTypeTable } from "@/lib/judging/conditionTypes";
  * 캐시까지 버려져 필요 없는 호출이 생긴다.
  */
 export const STRUCTURE_PROMPT_VERSION = "2026-08-31.1";
-export const CONDITION_PROMPT_VERSION = "2026-08-31.3";
+export const CONDITION_PROMPT_VERSION = "2026-08-31.4";
 
 /** 1단계 — 구조 분석. */
 export const STRUCTURE_SYSTEM_PROMPT = `당신은 웹 디자인 시안을 분석해 콘텐츠의 의미 구조와 배치 관계를 추출합니다.
@@ -252,41 +252,38 @@ layout-result의 accept는 **항상 1개**입니다.
 
 JSON 객체 하나만 출력하십시오. 설명, 머리말, 마크다운 코드 펜스를 붙이지 마십시오.
 
+입력의 \`target\`이 조건을 만들 구역입니다. \`outline\`은 이 구역이 페이지의 어디쯤인지 알려 주는 참고 정보이며, 다른 구역의 조건을 만들지 마십시오.
+
 {
-  "sections": [
+  "rubric": [
     {
-      "id": "sec-01",
-      "rubric": [
-        {
-          "id": "r1",
-          "level": "required",
-          "type": "list-grouping",
-          "target": "주 메뉴",
-          "desc": "반복되는 메뉴 항목 5개를 목록으로 묶을 것",
-          "accept": [{ "groupCount": 1, "itemsPerGroup": 5 }],
-          "hints": {
-            "1": "상단 메뉴 영역을 다시 확인해보세요.",
-            "2": "메뉴 항목이 같은 구조로 반복되고 있습니다.",
-            "3": "반복되는 항목은 목록 요소로 묶습니다."
-          }
-        },
-        {
-          "id": "r2",
-          "level": "recommended",
-          "type": "semantic-suggestion",
-          "target": "주 메뉴",
-          "desc": "주요 내비게이션 영역은 nav로 감싸는 것을 권장합니다"
-        }
-      ]
+      "id": "r1",
+      "level": "required",
+      "type": "list-grouping",
+      "target": "주 메뉴",
+      "desc": "반복되는 메뉴 항목 5개를 목록으로 묶을 것",
+      "accept": [{ "groupCount": 1, "itemsPerGroup": 5 }],
+      "hints": {
+        "1": "상단 메뉴 영역을 다시 확인해보세요.",
+        "2": "메뉴 항목이 같은 구조로 반복되고 있습니다.",
+        "3": "반복되는 항목은 목록 요소로 묶습니다."
+      }
+    },
+    {
+      "id": "r2",
+      "level": "recommended",
+      "type": "semantic-suggestion",
+      "target": "주 메뉴",
+      "desc": "주요 내비게이션 영역은 nav로 감싸는 것을 권장합니다"
     }
   ]
 }`;
 
 export const CONDITION_USER_PROMPT =
-  "첨부한 시안과 아래 구역 목록을 보고 각 구역의 판정 조건을 생성하십시오.";
+  "첨부한 시안에서 아래 `target` 구역만 보고 그 구역의 판정 조건을 생성하십시오.";
 
 export const EXAMPLE_USER_PROMPT =
-  "아래 판정 조건을 만족하는 구역별 모범 예시 코드를 작성하십시오.";
+  "아래 판정 조건을 만족하는 이 구역의 모범 예시 코드를 작성하십시오.";
 
 /** 3단계 — 모범 예시 생성. */
 export const EXAMPLE_SYSTEM_PROMPT = `당신은 확정된 판정 조건을 만족하는 HTML/CSS 예시를 작성합니다.
@@ -299,12 +296,15 @@ export const EXAMPLE_SYSTEM_PROMPT = `당신은 확정된 판정 조건을 만�
 4. CSS 프레임워크나 외부 라이브러리를 쓰지 마십시오.
 5. 주석은 넣지 마십시오.
 
+## 제목 단계
+
+구역별로 따로 작성하지만, 완성된 예시는 페이지 하나로 이어 붙여 검사합니다. 페이지 전체에 최상위 제목은 하나만 있어야 하고 제목 단계를 건너뛸 수 없으므로, 다음을 지키십시오.
+
+- \`isMainTitleSection\`이 \`true\`인 구역에서만 \`h1\`을 씁니다. 이 구역의 대표 제목이 \`h1\`입니다.
+- \`isMainTitleSection\`이 \`false\`이면 \`h1\`을 쓰지 마십시오. 구역 제목은 \`h2\`로 시작하고, 그 안의 하위 제목은 \`h3\` 이하를 씁니다.
+
 ## 출력 형식
 
-구역마다 하나씩, JSON 객체 하나만 출력하십시오. 설명이나 코드 펜스를 붙이지 마십시오.
+이 구역 하나에 대해 JSON 객체 하나만 출력하십시오. 설명이나 코드 펜스를 붙이지 마십시오.
 
-{
-  "sections": [
-    { "id": "sec-01", "html": "...", "css": "..." }
-  ]
-}`;
+{ "html": "...", "css": "..." }`;
