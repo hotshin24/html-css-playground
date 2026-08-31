@@ -34,25 +34,32 @@ export default function TopBar({
   return (
     <header className="flex h-12 shrink-0 items-center justify-between border-b border-chrome-border bg-chrome-panel px-4">
       <div className="flex items-center gap-2">
-        <span className="text-sm text-chrome-muted">
-          구역 {sectionIndex + 1}/{sectionCount}
-        </span>
-        {/* 완료한 구역에 다시 들어갈 수 있다 (F-08-03). */}
-        <select
-          value={sectionId ?? ""}
-          onChange={(event) => session.selectSection(event.target.value)}
-          aria-label="구역 선택"
-          className="rounded-md border border-chrome-border bg-chrome-bg px-2 py-1 text-sm"
-        >
-          {source?.sections.map((section) => {
-            const status = source.progress.sections[section.id]?.status ?? "locked";
-            return (
-              <option key={section.id} value={section.id} disabled={status === "locked"}>
-                {section.name} · {STATUS_MARK[status] ?? status}
-              </option>
-            );
-          })}
-        </select>
+        {/* 통짜 모드는 구역이 하나뿐이라 구역 표시를 두지 않는다 (PRD 5.5). */}
+        {source?.settings.mode === "whole" ? (
+          <span className="text-sm font-medium">{source.title}</span>
+        ) : (
+          <>
+            <span className="text-sm text-chrome-muted">
+              구역 {sectionIndex + 1}/{sectionCount}
+            </span>
+            {/* 완료한 구역에 다시 들어갈 수 있다 (F-08-03). */}
+            <select
+              value={sectionId ?? ""}
+              onChange={(event) => session.selectSection(event.target.value)}
+              aria-label="구역 선택"
+              className="rounded-md border border-chrome-border bg-chrome-bg px-2 py-1 text-sm"
+            >
+              {source?.sections.map((section) => {
+                const status = source.progress.sections[section.id]?.status ?? "locked";
+                return (
+                  <option key={section.id} value={section.id} disabled={status === "locked"}>
+                    {section.name} · {STATUS_MARK[status] ?? status}
+                  </option>
+                );
+              })}
+            </select>
+          </>
+        )}
 
         {progress?.needsRecheck && (
           <span

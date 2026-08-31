@@ -23,9 +23,11 @@ import { cacheKey, readCache, writeCache } from "@/lib/ai/responseCache";
 /**
  * 함수 최대 실행 시간(초).
  *
- * 구역 하나에 2단계와 3단계를 이어 부른다. 구역 수와 무관하게 일정하다.
+ * 구역 하나에 2단계와 3단계를 이어 부른다. 구역별 모드는 구역 수와 무관하게
+ * 약 55초다. 통짜 모드는 시안 전체가 한 구역이라 더 걸리는데, 구역 5개 상한
+ * (WHOLE_MODE_MAX_SECTIONS)에서 실측 약 97초였다. 여유를 두어 180으로 잡는다.
  */
-export const maxDuration = 120;
+export const maxDuration = 180;
 
 type TargetSection = {
   id: string;

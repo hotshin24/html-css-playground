@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { runConditionGeneration } from "@/lib/ai/runConditionGeneration";
 import { runStructureAnalysis } from "@/lib/ai/runStructureAnalysis";
 import {
   deleteSource,
@@ -59,10 +60,17 @@ function SourceCard({
 
         {analyzing && (
           <p className="mt-1 text-xs text-chrome-muted">
-            시안의 구조와 구역을 읽고 있습니다. 수 초 걸립니다.
+            {source.settings.mode === "whole"
+              ? "시안을 읽고 판정 조건과 모범 예시를 만듭니다. 1~2분 걸립니다."
+              : "시안의 구조와 구역을 읽고 있습니다. 수 초 걸립니다."}
           </p>
         )}
         {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+        {source.analysisWarning && (
+          <p className="mt-1 max-w-prose text-xs leading-relaxed text-chrome-warning">
+            {source.analysisWarning}
+          </p>
+        )}
 
         <div className="mt-3 flex items-center gap-2">
           {source.stage === "structure-pending" && (
@@ -75,14 +83,26 @@ function SourceCard({
               {analyzing ? "분석 중…" : "분석 시작"}
             </button>
           )}
-          {source.stage === "sections-pending" && (
-            <Link
-              href={`/sources/${source.id}/sections`}
-              className="rounded-md bg-chrome-accent px-3 py-1.5 text-sm font-medium text-white"
-            >
-              구역 확인
-            </Link>
-          )}
+          {source.stage === "sections-pending" &&
+            (source.settings.mode === "whole" ? (
+              // 통짜 모드는 구역 편집 화면을 거치지 않는다 (PRD 5.5).
+              // 조건 생성이 실패했을 때만 이 상태로 남는다.
+              <button
+                type="button"
+                onClick={() => onAnalyze(source)}
+                disabled={analyzing}
+                className="rounded-md bg-chrome-accent px-3 py-1.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-chrome-handle"
+              >
+                {analyzing ? "조건 만드는 중…" : "조건 생성 다시 시도"}
+              </button>
+            ) : (
+              <Link
+                href={`/sources/${source.id}/sections`}
+                className="rounded-md bg-chrome-accent px-3 py-1.5 text-sm font-medium text-white"
+              >
+                구역 확인
+              </Link>
+            ))}
           {source.stage === "ready" && (
             <Link
               href={`/sources/${source.id}/learn`}
@@ -130,18 +150,41 @@ export default function SourceList() {
       return next;
     });
 
-    const outcome = await runStructureAnalysis(source);
+    // 구조 분석이 끝난 소스를 다시 누르면(통짜 재시도) 그 단계는 건너뛴다.
+    let analyzed = source;
+    if (source.stage === "structure-pending") {
+      const outcome = await runStructureAnalysis(source);
+      if (!outcome.ok) {
+        setAnalyzingId(null);
+        // 등록 시점에 조건이 부실하면 학습 내내 영향을 받으므로 화면에 알린다.
+        setErrors((current) => ({ ...current, [source.id]: outcome.error }));
+        return;
+      }
+      analyzed = outcome.source;
+      setSources(
+        (current) =>
+          current?.map((entry) => (entry.id === analyzed.id ? analyzed : entry)) ?? null,
+      );
+    }
+
+    // 통짜 모드는 구역을 확인할 것이 없으므로 조건 생성까지 이어서 끝낸다 (PRD 5.5).
+    if (analyzed.settings.mode !== "whole") {
+      setAnalyzingId(null);
+      return;
+    }
+
+    const generated = await runConditionGeneration(analyzed);
     setAnalyzingId(null);
 
-    if (!outcome.ok) {
-      // 등록 시점에 조건이 부실하면 학습 내내 영향을 받으므로 화면에 알린다.
-      setErrors((current) => ({ ...current, [source.id]: outcome.error }));
+    if (!generated.ok) {
+      setErrors((current) => ({ ...current, [source.id]: generated.error }));
       return;
     }
 
     setSources(
       (current) =>
-        current?.map((entry) => (entry.id === outcome.source.id ? outcome.source : entry)) ?? null,
+        current?.map((entry) => (entry.id === generated.source.id ? generated.source : entry)) ??
+        null,
     );
   };
 
