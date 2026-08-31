@@ -1,37 +1,71 @@
 "use client";
 
 import SettingsPopover from "@/components/editor/SettingsPopover";
-import { DUMMY_SESSION, type EditorSettings } from "@/lib/constants";
+import type { EditorSettings } from "@/lib/constants";
+import type { LearningSession } from "@/lib/learning/useLearningSession";
 
 type TopBarProps = {
   settings: EditorSettings;
   onSettingsChange: (settings: EditorSettings) => void;
   saveFailed: boolean;
-  attemptsUsed: number;
-  /** 판정 중이거나 이미 끝난 구역이면 비활성. */
-  canSubmit: boolean;
+  session: LearningSession;
   onSubmit: () => void;
 };
 
-/**
- * 학습 화면 상단 바.
- * 구역 표시는 아직 더미 값이며, 소스 등록·구역 편집 화면이 생기면 교체한다.
- */
+const STATUS_MARK: Record<string, string> = {
+  passed: "통과",
+  revealed: "예시 공개",
+  in_progress: "작성 중",
+  locked: "잠김",
+};
+
+/** 학습 화면 상단 바. */
 export default function TopBar({
   settings,
   onSettingsChange,
   saveFailed,
-  attemptsUsed,
-  canSubmit,
+  session,
   onSubmit,
 }: TopBarProps) {
-  const { sectionIndex, sectionTotal, sectionName, attemptTotal } = DUMMY_SESSION;
+  const { source, sectionId, sectionIndex, attemptsUsed, maxAttempts, canSubmit } = session;
+  const progress = sectionId ? source?.progress.sections[sectionId] : undefined;
+  const sectionCount = source?.sections.length ?? 0;
 
   return (
     <header className="flex h-12 shrink-0 items-center justify-between border-b border-chrome-border bg-chrome-panel px-4">
-      <span className="rounded-md bg-chrome-bg px-2.5 py-1 text-sm font-medium">
-        구역 {sectionIndex}/{sectionTotal} · {sectionName}
-      </span>
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-chrome-muted">
+          구역 {sectionIndex + 1}/{sectionCount}
+        </span>
+        {/* 완료한 구역에 다시 들어갈 수 있다 (F-08-03). */}
+        <select
+          value={sectionId ?? ""}
+          onChange={(event) => session.selectSection(event.target.value)}
+          aria-label="구역 선택"
+          className="rounded-md border border-chrome-border bg-chrome-bg px-2 py-1 text-sm"
+        >
+          {source?.sections.map((section) => {
+            const status = source.progress.sections[section.id]?.status ?? "locked";
+            return (
+              <option key={section.id} value={section.id} disabled={status === "locked"}>
+                {section.name} · {STATUS_MARK[status] ?? status}
+              </option>
+            );
+          })}
+        </select>
+
+        {progress?.needsRecheck && (
+          <span
+            title={`${
+              source?.sections.find((entry) => entry.id === progress.recheckCause)?.name ??
+              "다른 구역"
+            }의 코드가 바뀌어 다시 확인이 필요합니다.`}
+            className="rounded-md bg-chrome-bg px-2 py-1 text-xs text-chrome-warning"
+          >
+            재확인 필요
+          </span>
+        )}
+      </div>
 
       <div className="flex items-center gap-3">
         {/*
@@ -50,7 +84,7 @@ export default function TopBar({
         )}
 
         <span className="text-sm text-chrome-muted">
-          시도 {attemptsUsed}/{attemptTotal}
+          시도 {attemptsUsed}/{maxAttempts}
         </span>
 
         <SettingsPopover settings={settings} onChange={onSettingsChange} />

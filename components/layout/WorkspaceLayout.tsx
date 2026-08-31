@@ -3,27 +3,18 @@
 import { useEffect, useRef, useState } from "react";
 import EditorPane from "@/components/editor/EditorPane";
 import ColumnResizer from "@/components/layout/ColumnResizer";
-import FeedbackPanel, { type FeedbackState } from "@/components/layout/FeedbackPanel";
+import FeedbackPanel from "@/components/layout/FeedbackPanel";
 import PaneHeader from "@/components/layout/PaneHeader";
 import RowResizer from "@/components/layout/RowResizer";
 import TopBar from "@/components/layout/TopBar";
 import PreviewFrame from "@/components/preview/PreviewFrame";
-import {
-  buildDemoSections,
-  DEMO_CURRENT_SECTION_ID,
-  DEMO_MAIN_TITLE_SECTION_ID,
-  DEMO_RECOMMENDED,
-} from "@/lib/judging/demoSession";
-import { buildFailureFeedback } from "@/lib/judging/feedback";
-import { judgeSection } from "@/lib/judging/judge";
-import { loadDraft, saveDraft } from "@/lib/storage/draftStore";
+import type { LearningSession } from "@/lib/learning/useLearningSession";
 import { loadLayout, saveLayout } from "@/lib/storage/layoutStore";
 import { loadEditorSettings, saveEditorSettings } from "@/lib/storage/settingsStore";
 import {
   DEFAULT_COLUMN_RATIOS,
   DEFAULT_EDITOR_ROW_RATIOS,
   DEFAULT_EDITOR_SETTINGS,
-  DUMMY_SESSION,
   MIN_COLUMN_PX,
   MIN_EDITOR_ROW_PX,
   RESIZER_PX,
@@ -39,6 +30,7 @@ const clamp = (value: number, min: number, max: number) =>
 type WorkspaceLayoutProps = {
   /** 1열에 표시할 시안 이미지. 등록된 소스의 Blob URL이다. */
   designImageSrc: string;
+  session: LearningSession;
 };
 
 /**
@@ -47,16 +39,13 @@ type WorkspaceLayoutProps = {
  * 열 너비와 에디터 높이는 px가 아니라 비율로 들고 있다.
  * 창 크기가 달라져도 배분이 유지되고, 5단계에서 저장·복원할 때도 그대로 쓸 수 있다.
  */
-export default function WorkspaceLayout({ designImageSrc }: WorkspaceLayoutProps) {
+export default function WorkspaceLayout({ designImageSrc, session }: WorkspaceLayoutProps) {
   const [columns, setColumns] = useState<ColumnRatios>(DEFAULT_COLUMN_RATIOS);
   const [editorRows, setEditorRows] = useState<EditorRowRatios>(
     DEFAULT_EDITOR_ROW_RATIOS,
   );
   const [feedbackExpanded, setFeedbackExpanded] = useState(false);
 
-  // 사용자가 작성한 코드. 4단계에서 미리보기로, 5단계에서 저장 계층으로 연결한다.
-  const [htmlCode, setHtmlCode] = useState("");
-  const [cssCode, setCssCode] = useState("");
 
   // 에디터 설정. 5단계에서 저장 계층으로 연결한다.
   const [editorSettings, setEditorSettings] = useState<EditorSettings>(
@@ -72,9 +61,6 @@ export default function WorkspaceLayout({ designImageSrc }: WorkspaceLayoutProps
   // 가장 최근 저장의 성공 여부. 세 대상이 같은 저장소를 쓰므로 하나로 묶어 본다.
   const [saveFailed, setSaveFailed] = useState(false);
 
-  // 판정 상태. 진행 상태 저장은 3단계에서 저장 계층에 연결한다.
-  const [attemptsUsed, setAttemptsUsed] = useState(0);
-  const [feedbackState, setFeedbackState] = useState<FeedbackState>({ phase: "idle" });
 
   const bodyRef = useRef<HTMLDivElement>(null);
   const editorColumnRef = useRef<HTMLDivElement>(null);
@@ -89,11 +75,7 @@ export default function WorkspaceLayout({ designImageSrc }: WorkspaceLayoutProps
     let cancelled = false;
 
     const restore = async () => {
-      const [layout, settings, draft] = await Promise.all([
-        loadLayout(),
-        loadEditorSettings(),
-        loadDraft(DUMMY_SESSION.sectionId),
-      ]);
+      const [layout, settings] = await Promise.all([loadLayout(), loadEditorSettings()]);
       if (cancelled) return;
 
       if (layout) {
@@ -101,10 +83,6 @@ export default function WorkspaceLayout({ designImageSrc }: WorkspaceLayoutProps
         setEditorRows(layout.editorRows);
       }
       setEditorSettings(settings);
-      if (draft) {
-        setHtmlCode(draft.html);
-        setCssCode(draft.css);
-      }
       setHydrated(true);
     };
 
@@ -113,19 +91,6 @@ export default function WorkspaceLayout({ designImageSrc }: WorkspaceLayoutProps
       cancelled = true;
     };
   }, []);
-
-  // 작성 코드 자동 저장. 복원 전에는 기본값으로 덮어쓰지 않도록 막는다.
-  useEffect(() => {
-    if (!hydrated) return;
-
-    const timer = setTimeout(() => {
-      void saveDraft(DUMMY_SESSION.sectionId, { html: htmlCode, css: cssCode }).then(
-        (ok) => setSaveFailed(!ok),
-      );
-    }, SAVE_DEBOUNCE_MS);
-
-    return () => clearTimeout(timer);
-  }, [hydrated, htmlCode, cssCode]);
 
   // 레이아웃 비율 저장. 드래그 중에는 디바운스로 묶여 한 번만 기록된다.
   useEffect(() => {
@@ -144,62 +109,10 @@ export default function WorkspaceLayout({ designImageSrc }: WorkspaceLayoutProps
     void saveEditorSettings(editorSettings).then((ok) => setSaveFailed(!ok));
   }, [hydrated, editorSettings]);
 
-  const judging = feedbackState.phase === "judging";
-  const finished = feedbackState.phase === "passed" || feedbackState.phase === "revealed";
-
-  /** 확인 버튼. 판정하고 결과를 하단 패널에 표시한다. */
-  const handleSubmit = async () => {
-    if (judging || finished) return;
-
-    setFeedbackState({ phase: "judging" });
+  /** 확인 버튼. 판정 결과는 하단 패널에 표시한다. */
+  const handleSubmit = () => {
     setFeedbackExpanded(true);
-
-    const attempt = attemptsUsed + 1;
-    setAttemptsUsed(attempt);
-
-    const sections = buildDemoSections(htmlCode, cssCode);
-    const result = await judgeSection({
-      sections,
-      currentSectionId: DEMO_CURRENT_SECTION_ID,
-      mainTitleSectionId: DEMO_MAIN_TITLE_SECTION_ID,
-      required: [],
-      recommended: DEMO_RECOMMENDED,
-    });
-
-    const shared = {
-      recommended: result.recommended,
-      substitutedSectionIds: result.substitutedSectionIds,
-    };
-
-    if (result.passed) {
-      setFeedbackState({ phase: "passed", ...shared });
-      return;
-    }
-
-    const feedback = buildFailureFeedback(
-      result.outcomes,
-      [],
-      attempt,
-      DUMMY_SESSION.attemptTotal,
-    );
-
-    if (attempt >= DUMMY_SESSION.attemptTotal) {
-      const currentSection = sections.find((section) => section.id === DEMO_CURRENT_SECTION_ID);
-      setFeedbackState({
-        phase: "revealed",
-        feedback,
-        example: currentSection?.example ?? { html: "", css: "" },
-        ...shared,
-      });
-      return;
-    }
-
-    setFeedbackState({
-      phase: "failed",
-      feedback,
-      attemptsLeft: DUMMY_SESSION.attemptTotal - attempt,
-      ...shared,
-    });
+    void session.submit();
   };
 
   const endDrag = () => setDragging(null);
@@ -257,12 +170,9 @@ export default function WorkspaceLayout({ designImageSrc }: WorkspaceLayoutProps
       <TopBar
         settings={editorSettings}
         onSettingsChange={setEditorSettings}
-        saveFailed={saveFailed}
-        attemptsUsed={attemptsUsed}
-        canSubmit={!judging && !finished}
-        onSubmit={() => {
-          void handleSubmit();
-        }}
+        saveFailed={saveFailed || session.saveFailed}
+        session={session}
+        onSubmit={handleSubmit}
       />
 
       <div
@@ -286,7 +196,7 @@ export default function WorkspaceLayout({ designImageSrc }: WorkspaceLayoutProps
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={designImageSrc}
-              alt={`${DUMMY_SESSION.sectionName} 구역 시안`}
+              alt="학습 시안"
               className="w-full"
             />
           </div>
@@ -310,8 +220,8 @@ export default function WorkspaceLayout({ designImageSrc }: WorkspaceLayoutProps
           <EditorPane
             label="HTML"
             language="html"
-            value={htmlCode}
-            onChange={setHtmlCode}
+            value={session.html}
+            onChange={session.setHtml}
             settings={editorSettings}
           />
 
@@ -325,8 +235,8 @@ export default function WorkspaceLayout({ designImageSrc }: WorkspaceLayoutProps
           <EditorPane
             label="CSS"
             language="css"
-            value={cssCode}
-            onChange={setCssCode}
+            value={session.css}
+            onChange={session.setCss}
             settings={editorSettings}
           />
         </div>
@@ -342,7 +252,7 @@ export default function WorkspaceLayout({ designImageSrc }: WorkspaceLayoutProps
         <section className="flex min-w-0 flex-col bg-chrome-panel">
           <PaneHeader>결과 화면</PaneHeader>
           <div className="min-h-0 flex-1">
-            <PreviewFrame html={htmlCode} css={cssCode} />
+            <PreviewFrame html={session.html} css={session.css} />
           </div>
         </section>
       </div>
@@ -350,7 +260,7 @@ export default function WorkspaceLayout({ designImageSrc }: WorkspaceLayoutProps
       <FeedbackPanel
         expanded={feedbackExpanded}
         onToggle={() => setFeedbackExpanded((previous) => !previous)}
-        state={feedbackState}
+        state={session.feedbackState}
       />
     </div>
   );

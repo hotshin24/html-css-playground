@@ -1,43 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 import WorkspaceLayout from "@/components/layout/WorkspaceLayout";
-import { loadSource, type StoredSource } from "@/lib/storage/sourceStore";
+import { useLearningSession } from "@/lib/learning/useLearningSession";
 
-/**
- * 학습 화면 진입점.
- *
- * 등록된 소스의 시안 이미지를 불러와 1열에 표시한다. 판정 조건은 AI 연동이
- * 붙기 전까지 임시 세션을 쓴다.
- */
+/** 학습 화면 진입점. 등록된 소스의 시안과 판정 조건을 물린다. */
 export default function LearningScreen({ sourceId }: { sourceId: string }) {
-  const [source, setSource] = useState<StoredSource | null>(null);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [missing, setMissing] = useState(false);
+  const session = useLearningSession(sourceId);
+  const source = session.source;
 
+  // Blob 자체를 의존성으로 삼는다. 저장할 때마다 소스 객체는 새로 만들어지지만
+  // 이미지 Blob은 그대로이므로 URL을 다시 만들지 않는다.
+  const imageFile = source?.source.file ?? null;
+  const imageUrl = useMemo(
+    () => (imageFile ? URL.createObjectURL(imageFile) : null),
+    [imageFile],
+  );
   useEffect(() => {
-    let cancelled = false;
-    let url: string | null = null;
+    if (!imageUrl) return;
+    return () => URL.revokeObjectURL(imageUrl);
+  }, [imageUrl]);
 
-    loadSource(sourceId).then((loaded) => {
-      if (cancelled) return;
-      if (!loaded) {
-        setMissing(true);
-        return;
-      }
-      url = URL.createObjectURL(loaded.source.file);
-      setSource(loaded);
-      setImageUrl(url);
-    });
-
-    return () => {
-      cancelled = true;
-      if (url) URL.revokeObjectURL(url);
-    };
-  }, [sourceId]);
-
-  if (missing) {
+  if (session.missing) {
     return (
       <main className="flex flex-1 flex-col items-center justify-center gap-3">
         <p className="text-sm text-chrome-muted">등록된 시안을 찾을 수 없습니다.</p>
@@ -56,5 +41,16 @@ export default function LearningScreen({ sourceId }: { sourceId: string }) {
     );
   }
 
-  return <WorkspaceLayout designImageSrc={imageUrl} />;
+  if (source.stage !== "ready") {
+    return (
+      <main className="flex flex-1 flex-col items-center justify-center gap-3">
+        <p className="text-sm text-chrome-muted">아직 판정 조건이 준비되지 않았습니다.</p>
+        <Link href="/" className="text-sm text-chrome-accent">
+          목록으로
+        </Link>
+      </main>
+    );
+  }
+
+  return <WorkspaceLayout designImageSrc={imageUrl} session={session} />;
 }

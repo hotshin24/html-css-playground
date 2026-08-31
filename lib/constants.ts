@@ -1,7 +1,6 @@
 /** 저장소 키. 접두사로 이 앱의 데이터임을 구분한다. */
 export const STORAGE_KEYS = {
   editorSettings: "hcp:editor-settings",
-  draft: "hcp:draft",
   layout: "hcp:layout",
 } as const;
 
