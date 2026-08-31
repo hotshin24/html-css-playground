@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { SOLUTIONS } from "@/fixtures/solutions";
 import {
   buildJudgeDocument,
   JUDGE_FRAME_HEIGHT_PX,
@@ -116,7 +117,23 @@ async function runCases(): Promise<CaseResult[]> {
     detail: `제목 텍스트 = "${scriptFlag}"`,
   });
 
-  // 3. display:none 대조군
+  // 3. 스크롤바 폭 보정
+  {
+    const solution = SOLUTIONS[0];
+    const layoutWidth = await openJudgeDocument(
+      solution.html,
+      solution.css,
+      (judgeDocument) => judgeDocument.documentElement.clientWidth,
+    );
+
+    results.push({
+      name: "문서가 길어 스크롤바가 생겨도 배치 너비가 시안 너비와 같다",
+      passed: layoutWidth === JUDGE_FRAME_WIDTH_PX,
+      detail: `배치 너비 = ${layoutWidth}px (보정 없으면 ${JUDGE_FRAME_WIDTH_PX - 15}px 안팎)`,
+    });
+  }
+
+  // 4. display:none 대조군
   const hidden = await measureWithDisplayNone();
 
   results.push({

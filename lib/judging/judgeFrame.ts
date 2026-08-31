@@ -73,13 +73,45 @@ export async function openJudgeDocument<T>(
   try {
     await loaded;
     const judgeDocument = frame.contentDocument;
-    if (!judgeDocument) {
+    const judgeWindow = frame.contentWindow;
+    if (!judgeDocument || !judgeWindow) {
       throw new Error("판정용 문서에 접근할 수 없습니다. sandbox 설정을 확인하십시오.");
     }
+
+    await compensateScrollbar(frame, judgeDocument, judgeWindow);
     return read(judgeDocument);
   } finally {
     frame.remove();
   }
+}
+
+/**
+ * 스크롤바가 가져간 폭을 프레임 너비로 되돌려준다.
+ *
+ * 문서가 프레임보다 길면 세로 스크롤바가 생기고, 그만큼 배치 가능 너비가
+ * 줄어든다. 시안 너비에 딱 맞춘 설계는 이 몇 px 때문에 한 줄이 접히므로,
+ * 학습자가 맞게 작성해도 배치 조건이 실패한다.
+ *
+ * CSS를 주입하지 않고 프레임 자체를 넓혀 **문서의 배치 너비가 정확히
+ * 시안 너비가 되도록** 맞춘다. 높이는 건드리지 않으므로 vh 계산도 그대로다.
+ */
+async function compensateScrollbar(
+  frame: HTMLIFrameElement,
+  judgeDocument: Document,
+  judgeWindow: Window,
+): Promise<void> {
+  const gutter = judgeWindow.innerWidth - judgeDocument.documentElement.clientWidth;
+  if (gutter <= 0) return;
+
+  frame.style.width = `${JUDGE_FRAME_WIDTH_PX + gutter}px`;
+
+  // 새 너비로 다시 배치시킨다.
+  // requestAnimationFrame은 탭이나 창이 가려지면 발화하지 않아 판정이
+  // 무한 대기에 빠지므로 쓰지 않는다.
+  void frame.offsetWidth;
+  await new Promise<void>((resolve) => {
+    setTimeout(resolve, 0);
+  });
 }
 
 /** 측정에 쓰는 최소 사각형. */

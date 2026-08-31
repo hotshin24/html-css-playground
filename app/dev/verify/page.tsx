@@ -3,6 +3,7 @@ import CombinedCases from "@/components/dev/CombinedCases";
 import FeedbackCases from "@/components/dev/FeedbackCases";
 import FrameCases from "@/components/dev/FrameCases";
 import SchemaCases from "@/components/dev/SchemaCases";
+import SolutionPreviews from "@/components/dev/SolutionPreviews";
 import { buildPromptConditionTypeTable } from "@/lib/judging/conditionTypes";
 
 /**
@@ -15,13 +16,14 @@ import { buildPromptConditionTypeTable } from "@/lib/judging/conditionTypes";
  */
 export default function VerifyPage() {
   return (
-    <main className="mx-auto max-w-4xl overflow-y-auto p-8">
+    <main className="mx-auto max-w-6xl overflow-y-auto p-8">
       <h1 className="text-xl font-semibold">판정 엔진 검증</h1>
       <SchemaCases />
       <FrameCases />
       <CheckCases />
       <CombinedCases />
       <FeedbackCases />
+      <SolutionPreviews />
 
       <section className="mt-8">
         <h2 className="text-base font-medium">프롬프트 주입 텍스트</h2>
