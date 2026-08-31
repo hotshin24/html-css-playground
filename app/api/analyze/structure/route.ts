@@ -25,6 +25,8 @@ export type StructureAnalysis = {
 type RequestBody = {
   image?: string;
   mediaType?: string;
+  /** 검증용. 같은 이미지로 독립된 분석을 여러 번 받기 위해 캐시 키를 가른다. */
+  variant?: string;
 };
 
 const ALLOWED_MEDIA_TYPES = ["image/png", "image/jpeg", "image/webp"] as const;
@@ -64,7 +66,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "이미지가 없거나 지원하지 않는 형식입니다." }, { status: 400 });
   }
 
-  const key = cacheKey("structure", PROMPT_VERSION, body.image);
+  const key = cacheKey("structure", PROMPT_VERSION, body.image + (body.variant ?? ""));
   const cached = await readCache<StructureAnalysis>(key);
   if (cached) {
     return Response.json({ analysis: cached, cached: true, attempts: 0 });

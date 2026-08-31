@@ -14,6 +14,11 @@ export type Violation = {
   intent: string;
   /** 실패해야 하는 조건 id. 엔진 상시 조건은 유형 이름을 쓴다. */
   expectedFailures: string[];
+  /**
+   * 실패해야 하는 조건 유형.
+   * AI가 생성한 조건은 id가 다르므로 유형으로 확인한다.
+   */
+  expectedTypes: string[];
   html: string;
   css: string;
 };
@@ -165,6 +170,7 @@ export const VIOLATIONS: Violation[] = [
     id: "V1",
     intent: "상품 카드를 목록으로 묶지 않고 div로 나열",
     expectedFailures: ["r3"],
+    expectedTypes: ["list-grouping"],
     html: buildHtml({ productsAsDivs: true }),
     css: BASE_CSS,
   },
@@ -172,6 +178,7 @@ export const VIOLATIONS: Violation[] = [
     id: "V2",
     intent: "상품 카드를 세로 한 열로 쌓음",
     expectedFailures: ["r4"],
+    expectedTypes: ["layout-result"],
     html: buildHtml({}),
     css: PRODUCTS_STACKED_CSS,
   },
@@ -179,6 +186,7 @@ export const VIOLATIONS: Violation[] = [
     id: "V3",
     intent: "상품 이미지 하나에 대체 텍스트 누락",
     expectedFailures: ["r5"],
+    expectedTypes: ["image-alt"],
     html: buildHtml({ dropAlt: true }),
     css: BASE_CSS,
   },
@@ -186,6 +194,7 @@ export const VIOLATIONS: Violation[] = [
     id: "V4",
     intent: "구역 제목을 h3으로 써서 제목 단계를 건너뜀",
     expectedFailures: ["heading-order"],
+    expectedTypes: ["heading-order"],
     html: buildHtml({ skipHeading: true }),
     css: BASE_CSS,
   },
@@ -193,6 +202,7 @@ export const VIOLATIONS: Violation[] = [
     id: "V5",
     intent: "구역 제목을 h1로 써서 최상위 제목이 둘",
     expectedFailures: ["heading-single"],
+    expectedTypes: ["heading-single"],
     html: buildHtml({ extraH1: true }),
     css: BASE_CSS,
   },
@@ -200,6 +210,7 @@ export const VIOLATIONS: Violation[] = [
     id: "V6",
     intent: "상품을 2개짜리 목록 3벌로 묶음 (accept에 없는 해석)",
     expectedFailures: ["r3"],
+    expectedTypes: ["list-grouping"],
     html: buildHtml({ productsInPairs: true }),
     css: PAIRS_CSS,
   },
@@ -207,6 +218,7 @@ export const VIOLATIONS: Violation[] = [
     id: "V7",
     intent: "메뉴 항목을 세로로 쌓음",
     expectedFailures: ["r2"],
+    expectedTypes: ["layout-result"],
     html: buildHtml({}),
     css: MENU_STACKED_CSS,
   },
@@ -214,6 +226,7 @@ export const VIOLATIONS: Violation[] = [
     id: "V8",
     intent: "메뉴 항목을 목록으로 묶지 않고 div로 나열",
     expectedFailures: ["r1"],
+    expectedTypes: ["list-grouping"],
     html: buildHtml({ menuAsDivs: true }),
     css: BASE_CSS,
   },
@@ -223,6 +236,7 @@ export const VIOLATIONS: Violation[] = [
 export const FORM_VIOLATION = {
   intent: "검색 입력창에 레이블을 연결하지 않음",
   expectedFailures: ["f1"],
+  expectedTypes: ["form-label"],
   html: `<h1>검색</h1>
 <form>
   <span>검색어</span>

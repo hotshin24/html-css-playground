@@ -26,6 +26,8 @@ type RequestBody = {
   image?: string;
   mediaType?: string;
   sections?: SectionInput[];
+  /** 검증용. 같은 입력으로 독립된 생성을 여러 번 받기 위해 캐시 키를 가른다. */
+  variant?: string;
 };
 
 type RubricResponse = { sections: { id: string; rubric: unknown[] }[] };
@@ -64,7 +66,8 @@ export async function POST(request: Request) {
   const sectionsPayload = JSON.stringify({ sections: body.sections }, null, 2);
 
   // 2단계 — 판정 조건
-  const rubricKey = cacheKey("conditions", PROMPT_VERSION, body.image + sectionsPayload);
+  const variant = body.variant ?? "";
+  const rubricKey = cacheKey("conditions", PROMPT_VERSION, body.image + sectionsPayload + variant);
   let rubric = await readCache<RubricResponse>(rubricKey);
   let rubricAttempts = 0;
 
@@ -88,7 +91,7 @@ export async function POST(request: Request) {
 
   // 3단계 — 모범 예시. 조건이 먼저 확정되어야 예시가 조건에 종속되지 않는다.
   const rubricPayload = JSON.stringify(rubric, null, 2);
-  const exampleKey = cacheKey("examples", PROMPT_VERSION, rubricPayload);
+  const exampleKey = cacheKey("examples", PROMPT_VERSION, rubricPayload + variant);
   let examples = await readCache<ExampleResponse>(exampleKey);
   let exampleAttempts = 0;
 

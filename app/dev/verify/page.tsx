@@ -1,3 +1,4 @@
+import AiVerificationRun from "@/components/dev/AiVerificationRun";
 import CheckCases from "@/components/dev/CheckCases";
 import CombinedCases from "@/components/dev/CombinedCases";
 import FeedbackCases from "@/components/dev/FeedbackCases";
@@ -25,6 +26,7 @@ export default function VerifyPage() {
       <CombinedCases />
       <FeedbackCases />
       <VerificationRun />
+      <AiVerificationRun />
       <SolutionPreviews />
 
       <section className="mt-8">
