@@ -36,13 +36,18 @@ import {
 const clamp = (value: number, min: number, max: number) =>
   Math.min(Math.max(value, min), max);
 
+type WorkspaceLayoutProps = {
+  /** 1열에 표시할 시안 이미지. 등록된 소스의 Blob URL이다. */
+  designImageSrc: string;
+};
+
 /**
  * 학습 화면 전체 골격.
  *
  * 열 너비와 에디터 높이는 px가 아니라 비율로 들고 있다.
  * 창 크기가 달라져도 배분이 유지되고, 5단계에서 저장·복원할 때도 그대로 쓸 수 있다.
  */
-export default function WorkspaceLayout() {
+export default function WorkspaceLayout({ designImageSrc }: WorkspaceLayoutProps) {
   const [columns, setColumns] = useState<ColumnRatios>(DEFAULT_COLUMN_RATIOS);
   const [editorRows, setEditorRows] = useState<EditorRowRatios>(
     DEFAULT_EDITOR_ROW_RATIOS,
@@ -280,7 +285,7 @@ export default function WorkspaceLayout() {
             {/* 향후 사용자가 업로드한 이미지를 Blob URL로 표시하므로 next/image를 쓰지 않는다. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={DUMMY_SESSION.designImageSrc}
+              src={designImageSrc}
               alt={`${DUMMY_SESSION.sectionName} 구역 시안`}
               className="w-full"
             />

@@ -13,7 +13,6 @@ export const DUMMY_SESSION = {
   attemptTotal: 3,
   /** 작성 코드를 구역별로 저장하기 위한 식별자. */
   sectionId: "demo-sec-01",
-  designImageSrc: "/sample-design.svg",
 } as const;
 
 /** 열 너비 비율. 세 값의 합이 1이 되도록 유지한다. */
