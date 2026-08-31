@@ -189,7 +189,7 @@ export default function WorkspaceLayout({ designImageSrc, session }: WorkspaceLa
         }}
       >
         {/* 1열 — 시안 */}
-        <section className="flex min-w-0 flex-col bg-chrome-panel">
+        <section className="flex min-h-0 min-w-0 flex-col bg-chrome-panel">
           <PaneHeader>시안</PaneHeader>
           <div className="min-h-0 flex-1 overflow-auto p-3">
             {/* 향후 사용자가 업로드한 이미지를 Blob URL로 표시하므로 next/image를 쓰지 않는다. */}
@@ -249,7 +249,7 @@ export default function WorkspaceLayout({ designImageSrc, session }: WorkspaceLa
         />
 
         {/* 3열 — 실시간 결과 화면 */}
-        <section className="flex min-w-0 flex-col bg-chrome-panel">
+        <section className="flex min-h-0 min-w-0 flex-col bg-chrome-panel">
           <PaneHeader>결과 화면</PaneHeader>
           <div className="min-h-0 flex-1">
             <PreviewFrame html={session.html} css={session.css} />

@@ -45,3 +45,6 @@ next-env.d.ts
 
 # AI 분석 응답 캐시 (개발용)
 .analysis-cache/
+
+# 로컬 테스트용 시안 (타사 페이지 포함, 커밋 금지)
+public/_local/

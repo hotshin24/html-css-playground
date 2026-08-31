@@ -5,6 +5,7 @@ import FeedbackCases from "@/components/dev/FeedbackCases";
 import FrameCases from "@/components/dev/FrameCases";
 import SchemaCases from "@/components/dev/SchemaCases";
 import SolutionPreviews from "@/components/dev/SolutionPreviews";
+import SourceSelfCheck from "@/components/dev/SourceSelfCheck";
 import VerificationRun from "@/components/dev/VerificationRun";
 import { buildPromptConditionTypeTable } from "@/lib/judging/conditionTypes";
 
@@ -28,6 +29,7 @@ export default function VerifyPage() {
       <VerificationRun />
       <AiVerificationRun />
       <SolutionPreviews />
+      <SourceSelfCheck />
 
       <section className="mt-8">
         <h2 className="text-base font-medium">프롬프트 주입 텍스트</h2>
