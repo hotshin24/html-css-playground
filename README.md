@@ -2,7 +2,7 @@
 
 웹 디자인 시안을 보고 직접 HTML/CSS를 작성하며 **시맨틱 마크업**과 **레이아웃 구현** 능력을 훈련하는 학습 도구입니다.
 
-상세 사양은 [docs/PRD_HTMLCSS_Playground_v0.3.md](docs/PRD_HTMLCSS_Playground_v0.3.md)를 참조하세요.
+상세 사양은 [docs/PRD.md](docs/PRD.md)를 참조하세요. 시안 분석 프롬프트는 [docs/analysis-prompt.md](docs/analysis-prompt.md)에 있습니다.
 
 ## 기술 스택
 
@@ -33,7 +33,10 @@ http://localhost:3000 에서 확인합니다.
 app/            라우트, 레이아웃, 전역 스타일
 components/     화면 구성 요소
 lib/            에디터 확장 구성, 저장 계층
-docs/           PRD
+docs/           PRD, 시안 분석 프롬프트
+docs/archive/   단계별 구현 요청서 기록
 ```
+
+문서는 파일명에 버전을 붙이지 않고 하나로 유지합니다. 변경 이력은 Git 커밋에 남깁니다.
 
 저장소 접근은 `lib/storage/` 안에만 두고 컴포넌트에서 직접 호출하지 않습니다. 저장소 교체를 위해 인터페이스는 Promise 반환으로 통일합니다.
