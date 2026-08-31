@@ -1,3 +1,4 @@
+import FrameCases from "@/components/dev/FrameCases";
 import SchemaCases from "@/components/dev/SchemaCases";
 import { buildPromptConditionTypeTable } from "@/lib/judging/conditionTypes";
 
@@ -14,6 +15,7 @@ export default function VerifyPage() {
     <main className="mx-auto max-w-4xl overflow-y-auto p-8">
       <h1 className="text-xl font-semibold">판정 엔진 검증</h1>
       <SchemaCases />
+      <FrameCases />
 
       <section className="mt-8">
         <h2 className="text-base font-medium">프롬프트 주입 텍스트</h2>
