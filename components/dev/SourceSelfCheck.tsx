@@ -129,7 +129,7 @@ export default function SourceSelfCheck() {
         type="button"
         onClick={run}
         disabled={running}
-        className="mt-2 rounded border border-chrome-line px-3 py-1 text-sm disabled:opacity-50"
+        className="mt-2 rounded border border-chrome-border px-3 py-1 text-sm disabled:opacity-50"
       >
         {running ? "판정 중…" : "실행"}
       </button>
@@ -143,7 +143,7 @@ export default function SourceSelfCheck() {
           (section) => section.failed.length > 0 || section.error !== null,
         ).length;
         return (
-          <div key={report.id} className="mt-3 rounded border border-chrome-line p-3">
+          <div key={report.id} className="mt-3 rounded border border-chrome-border p-3">
             <p className="text-sm font-medium">
               {report.title} — 구역 {report.sections.length}개 중 {failedCount}개 불합격
             </p>
@@ -153,7 +153,7 @@ export default function SourceSelfCheck() {
             <table className="mt-2 w-full text-xs">
               <tbody>
                 {report.sections.map((section) => (
-                  <tr key={section.order} className="border-t border-chrome-line">
+                  <tr key={section.order} className="border-t border-chrome-border">
                     <td className="w-8 py-1 align-top">{section.order}</td>
                     <td className="py-1 align-top">{section.name}</td>
                     <td className="w-12 py-1 text-right align-top">{section.conditionCount}개</td>
