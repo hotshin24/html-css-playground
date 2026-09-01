@@ -65,6 +65,18 @@ const BARE_IMG_SIZED_CSS = `.row { display: flex; gap: 16px; }
 const BARE_IMG_UNSIZED_CSS = `.row { display: flex; gap: 16px; }`;
 const BARE_IMG_EMPTY_ALT_HTML = BARE_IMG_HTML.replace(/alt="[^"]*"/g, 'alt=""');
 
+/* 자리표시 경로. 앱이 실제로 내주므로 판정 프레임에서도 로드된다. */
+const PLACEHOLDER_HTML = `<ul class="list">
+  <li><img src="/placeholder/300x220.svg" alt="상품 가"><p>상품 가</p></li>
+  <li><img src="/placeholder/300x220.svg" alt="상품 나"><p>상품 나</p></li>
+  <li><img src="/placeholder/300x220.svg" alt="상품 다"><p>상품 다</p></li>
+</ul>`;
+const PLACEHOLDER_BARE_HTML = `<div class="row">
+  <img src="/placeholder/120x60.svg" alt="">
+  <img src="/placeholder/120x60.svg" alt="">
+  <img src="/placeholder/120x60.svg" alt="">
+</div>`;
+
 const ROWS: Row[] = [
   { 이름: "flex · 크기 지정 (픽스처 방식)", html: CARD_HTML, css: SIZED_CSS },
   { 이름: "flex · 크기 미지정", html: CARD_HTML, css: UNSIZED_CSS },
@@ -77,6 +89,9 @@ const ROWS: Row[] = [
   { 이름: "이미지가 항목 · 크기 지정", html: BARE_IMG_HTML, css: BARE_IMG_SIZED_CSS },
   { 이름: "이미지가 항목 · 크기 미지정", html: BARE_IMG_HTML, css: BARE_IMG_UNSIZED_CSS },
   { 이름: "이미지가 항목 · 크기 미지정 + 빈 alt", html: BARE_IMG_EMPTY_ALT_HTML, css: BARE_IMG_UNSIZED_CSS },
+  { 이름: "자리표시 · CSS 크기 미지정", html: PLACEHOLDER_HTML, css: UNSIZED_CSS },
+  { 이름: "자리표시 · CSS 크기 지정", html: PLACEHOLDER_HTML, css: SIZED_CSS },
+  { 이름: "자리표시 · 이미지가 항목 + 빈 alt", html: PLACEHOLDER_BARE_HTML, css: BARE_IMG_UNSIZED_CSS },
 ];
 
 type Report = {

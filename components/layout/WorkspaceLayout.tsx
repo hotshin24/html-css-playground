@@ -6,6 +6,7 @@ import ColumnResizer from "@/components/layout/ColumnResizer";
 import DesignPane from "@/components/layout/DesignPane";
 import FeedbackPanel from "@/components/layout/FeedbackPanel";
 import PaneHeader from "@/components/layout/PaneHeader";
+import PlaceholderPicker from "@/components/layout/PlaceholderPicker";
 import RowResizer from "@/components/layout/RowResizer";
 import TopBar from "@/components/layout/TopBar";
 import PreviewFrame from "@/components/preview/PreviewFrame";
@@ -215,6 +216,7 @@ export default function WorkspaceLayout({
             bounds={currentBounds}
             sectionId={session.sectionId}
           />
+          <PlaceholderPicker />
         </section>
 
         <ColumnResizer
