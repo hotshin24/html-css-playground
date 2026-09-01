@@ -42,7 +42,8 @@ export default function SolutionPreviews() {
             </figcaption>
             <iframe
               title={`정답 코드 ${solution.id}`}
-              sandbox=""
+              // 학습자가 보는 것과 같은 조건이어야 대조에 쓸 수 있다.
+              sandbox="allow-same-origin"
               srcDoc={buildJudgeDocument(solution.html, solution.css)}
               className="border border-chrome-border bg-white"
               style={{ width: JUDGE_FRAME_WIDTH_PX, height: PREVIEW_HEIGHT }}
