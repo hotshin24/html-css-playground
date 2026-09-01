@@ -17,6 +17,7 @@ import {
   EXAMPLE_SYSTEM_PROMPT,
   EXAMPLE_USER_PROMPT,
   CONDITION_PROMPT_VERSION,
+  EXAMPLE_PROMPT_VERSION,
 } from "@/lib/ai/prompts";
 import { cacheKey, readCache, writeCache } from "@/lib/ai/responseCache";
 
@@ -142,7 +143,7 @@ export async function POST(request: Request) {
     null,
     2,
   );
-  const exampleKey = cacheKey("examples", CONDITION_PROMPT_VERSION, rubricPayload + variant);
+  const exampleKey = cacheKey("examples", EXAMPLE_PROMPT_VERSION, rubricPayload + variant);
   let examples = await readCache<ExampleResponse>(exampleKey);
   let exampleAttempts = 0;
 

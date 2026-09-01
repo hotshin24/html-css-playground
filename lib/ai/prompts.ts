@@ -19,6 +19,14 @@ import { buildPromptConditionTypeTable } from "@/lib/judging/conditionTypes";
  */
 export const STRUCTURE_PROMPT_VERSION = "2026-08-31.1";
 export const CONDITION_PROMPT_VERSION = "2026-08-31.4";
+/**
+ * 3단계 판본. 2단계와 따로 둔다.
+ *
+ * 예시 지시만 고쳤는데 조건 캐시까지 버려지면 같은 조건을 다시 사는 셈이 된다.
+ * 조건이 그대로면 예시 요청의 입력(조건 묶음)도 그대로이므로, 이 값만 올리면
+ * 예시만 다시 만들어진다.
+ */
+export const EXAMPLE_PROMPT_VERSION = "2026-09-01.1";
 
 /** 1단계 — 구조 분석. */
 export const STRUCTURE_SYSTEM_PROMPT = `당신은 웹 디자인 시안을 분석해 콘텐츠의 의미 구조와 배치 관계를 추출합니다.
@@ -295,6 +303,12 @@ export const EXAMPLE_SYSTEM_PROMPT = `당신은 확정된 판정 조건을 만�
 3. 과도한 최적화나 특이한 기법을 쓰지 마십시오.
 4. CSS 프레임워크나 외부 라이브러리를 쓰지 마십시오.
 5. 주석은 넣지 마십시오.
+
+## 이미지
+
+\`img\`에는 **반드시 CSS로 크기를 지정하십시오.** \`width\`와 \`height\`를 함께 주거나, \`width\`와 \`aspect-ratio\`를 함께 줍니다. 배경색도 함께 주어 그림이 없어도 자리가 보이게 하십시오.
+
+결과 화면은 격리된 문서라 외부 이미지를 불러오지 않습니다. 크기를 지정하지 않으면 이미지가 자리를 잡지 못해 학습자가 자기 배치를 확인할 수 없습니다. 실무에서도 이미지 자리를 미리 잡아 두는 것이 권장 관행이므로 학습 내용과도 어긋나지 않습니다.
 
 ## 제목 단계
 
