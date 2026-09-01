@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
+import ZoomBadge from "@/components/layout/ZoomBadge";
+import { useImageZoom } from "@/lib/learning/useImageZoom";
 import type { SectionBounds } from "@/lib/storage/sourceStore";
 
 /**
@@ -24,7 +26,7 @@ export default function DesignPane({
   bounds,
   sectionId,
 }: DesignPaneProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const { scale, scrollRef, contentStyle, reset, zoomed } = useImageZoom();
   const imageRef = useRef<HTMLImageElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   /** 이 구역으로 아직 옮기지 않았다는 표시. 옮긴 뒤에는 사용자의 스크롤을 건드리지 않는다. */
@@ -49,13 +51,16 @@ export default function DesignPane({
       box.offsetTop - (scroller.clientHeight - box.offsetHeight) / 2;
     // 부드러운 스크롤은 직후의 배치 변화(이미지 디코드 완료 등)에 취소된다.
     scroller.scrollTop = Math.max(0, offset);
-  }, []);
+  }, [scrollRef]);
 
   // 구역이 바뀌었을 때. 이때는 이미지가 이미 그려져 있으므로 이 자리에서 끝난다.
   useEffect(() => {
     pendingRef.current = true;
     scrollToSection();
   }, [sectionId, scrollToSection]);
+
+  // 배율이 바뀌면 강조 구역의 위치도 달라진다. 다만 확대는 커서를 기준으로
+  // 붙들어야 하므로 여기서 다시 맞추지 않는다.
 
   const topPercent = bounds ? bounds.topRatio * 100 : 0;
   const heightPercent = bounds ? bounds.heightRatio * 100 : 100;
@@ -64,9 +69,12 @@ export default function DesignPane({
     // 시안도 대개 밝은 배경이라 미리보기와 같은 문제를 갖는다. 3열과 동일한
     // 프레임을 둘러 "양쪽은 참조 대상, 가운데는 작업 영역"으로 읽히게 한다.
     <div className="min-h-0 flex-1 p-3">
-      <div className="h-full overflow-hidden rounded-lg border border-chrome-border bg-chrome-bg p-2">
+      <div className="relative h-full overflow-hidden rounded-lg border border-chrome-border bg-chrome-bg p-2">
+        {zoomed && <ZoomBadge scale={scale} onReset={reset} />}
         <div ref={scrollRef} className="h-full overflow-auto rounded-md">
-          <div className="relative">
+          {/* 너비 비율로 키운다. 안쪽 좌표가 모두 이 상자를 기준으로 하므로
+              오버레이와 자동 스크롤이 손대지 않고 따라온다. */}
+          <div className="relative" style={contentStyle} onDoubleClick={reset}>
             {/* 사용자가 등록한 이미지를 Blob URL로 표시하므로 next/image를 쓰지 않는다. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img

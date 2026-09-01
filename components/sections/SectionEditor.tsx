@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import ZoomBadge from "@/components/layout/ZoomBadge";
 import { runConditionGeneration } from "@/lib/ai/runConditionGeneration";
+import { useImageZoom } from "@/lib/learning/useImageZoom";
 import {
   isContiguous,
   mergeWithNext,
@@ -36,6 +38,7 @@ function Overlay({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dragging, setDragging] = useState<number | null>(null);
+  const { scale, scrollRef, contentStyle, reset, zoomed } = useImageZoom();
 
   /** 포인터 위치를 이미지 세로 비율로 바꾼다. */
   const toRatio = (clientY: number): number => {
@@ -45,10 +48,21 @@ function Overlay({
   };
 
   return (
-    <div ref={containerRef} className="relative select-none">
-      {/* 저장된 Blob을 표시하므로 next/image를 쓰지 않는다. */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={imageUrl} alt="등록한 시안" className="block w-full" />
+    // 경계가 몇 px 어긋났는지는 열 너비에 맞춘 상태로는 보이지 않는다.
+    // 오버레이 좌표가 비율이고 드래그는 getBoundingClientRect로 재므로,
+    // 너비 비율로 키우면 둘 다 손대지 않고 따라온다.
+    <div className="relative h-full">
+      {zoomed && <ZoomBadge scale={scale} onReset={reset} />}
+      <div ref={scrollRef} className="h-full overflow-auto">
+        <div
+          ref={containerRef}
+          className="relative select-none"
+          style={contentStyle}
+          onDoubleClick={reset}
+        >
+          {/* 저장된 Blob을 표시하므로 next/image를 쓰지 않는다. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={imageUrl} alt="등록한 시안" className="block w-full" />
 
       {sections.map((section, index) => {
         const selected = index === selectedIndex;
@@ -116,7 +130,9 @@ function Overlay({
           }`}
           style={{ top: `${(section.bounds.topRatio + section.bounds.heightRatio) * 100}%` }}
         />
-      ))}
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -273,7 +289,7 @@ export default function SectionEditor({ sourceId }: { sourceId: string }) {
       </header>
 
       <div className="grid min-h-0 flex-1 grid-cols-[1fr_320px]">
-        <div className="min-h-0 overflow-y-auto border-r border-chrome-border p-6">
+        <div className="min-h-0 overflow-hidden border-r border-chrome-border p-6">
           <Overlay
             imageUrl={imageUrl}
             sections={sections}
