@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import SettingsPopover from "@/components/editor/SettingsPopover";
 import type { EditorSettings } from "@/lib/constants";
 import type { LearningSession } from "@/lib/learning/useLearningSession";
@@ -34,7 +35,19 @@ export default function TopBar({
 
   return (
     <header className="flex h-12 shrink-0 items-center justify-between border-b border-chrome-border bg-chrome-panel px-4">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
+        {/*
+          학습 화면에서 나갈 길이 없어 브라우저 뒤로 가기밖에 방법이 없었다.
+          다른 화면과 같은 모양으로 둔다. 코드는 자동 저장되므로 나가기 전에
+          물어볼 것이 없다.
+        */}
+        <Link
+          href="/"
+          className="shrink-0 text-sm text-chrome-muted hover:text-chrome-text"
+        >
+          ← 목록
+        </Link>
+
         {/* 통짜 모드는 구역이 하나뿐이라 구역 표시를 두지 않는다 (PRD 5.5). */}
         {source?.settings.mode === "whole" ? (
           <span className="text-sm font-medium">{source.title}</span>

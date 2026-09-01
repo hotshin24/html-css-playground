@@ -1,3 +1,4 @@
+import Link from "next/link";
 import AiVerificationRun from "@/components/dev/AiVerificationRun";
 import CheckCases from "@/components/dev/CheckCases";
 import CombinedCases from "@/components/dev/CombinedCases";
@@ -22,7 +23,10 @@ import { buildPromptConditionTypeTable } from "@/lib/judging/conditionTypes";
 export default function VerifyPage() {
   return (
     <main className="mx-auto max-w-6xl overflow-y-auto p-8">
-      <h1 className="text-xl font-semibold">판정 엔진 검증</h1>
+      <Link href="/" className="text-sm text-chrome-muted hover:text-chrome-text">
+        ← 목록으로
+      </Link>
+      <h1 className="mt-2 text-xl font-semibold">판정 엔진 검증</h1>
       <SchemaCases />
       <FrameCases />
       <CheckCases />

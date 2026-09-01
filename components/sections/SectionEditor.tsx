@@ -137,11 +137,20 @@ function Overlay({
   );
 }
 
+/** 구역 구성을 문자열로 굳힌다. 경계·이름·개수가 하나라도 다르면 값이 달라진다. */
+function signatureOf(sections: EditableSection[]): string {
+  return sections
+    .map((s) => `${s.name}:${s.bounds.topRatio.toFixed(6)}:${s.bounds.heightRatio.toFixed(6)}`)
+    .join("|");
+}
+
 /** 구역 확인 및 조정 화면 (PRD 5.4). */
 export default function SectionEditor({ sourceId }: { sourceId: string }) {
   const router = useRouter();
   const [state, setState] = useState<LoadState>({ phase: "loading" });
   const [sections, setSections] = useState<EditableSection[]>([]);
+  /** 불러온 직후의 구역 구성. 편집 여부를 이 값과 비교해 판단한다. */
+  const baselineRef = useRef<string | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [saving, setSaving] = useState(false);
   /** 조건 생성 진행 상황. 구역마다 따로 요청하므로 몇 개가 끝났는지 알 수 있다. */
@@ -157,7 +166,11 @@ export default function SectionEditor({ sourceId }: { sourceId: string }) {
         return;
       }
       setState({ phase: "ready", source: loaded });
-      setSections(normalizeSections(loaded.sections));
+      const normalized = normalizeSections(loaded.sections);
+      setSections(normalized);
+      // 나갈 때 편집 여부를 비교할 기준. 확정 전까지 저장하지 않으므로
+      // 이 값과 다르면 잃을 것이 있다는 뜻이다.
+      baselineRef.current = signatureOf(normalized);
     });
     return () => {
       cancelled = true;
@@ -259,7 +272,24 @@ export default function SectionEditor({ sourceId }: { sourceId: string }) {
     <main className="flex min-h-0 flex-1 flex-col">
       <header className="flex h-12 shrink-0 items-center justify-between border-b border-chrome-border bg-chrome-panel px-4">
         <div className="flex items-center gap-3">
-          <Link href="/" className="text-sm text-chrome-muted hover:text-chrome-text">
+          {/*
+            구역 편집은 확정 전까지 저장하지 않으므로 그냥 나가면 조정한 내용이
+            사라지고 다음에 들어올 때 AI 분할 결과로 돌아간다. 임시 저장을 두면
+            "확정 전 초안"이라는 상태가 하나 늘어 결합 판정과 조건 생성이 어느
+            쪽을 봐야 하는지 모호해지므로, 저장하지 않는 대신 나가기 전에 묻는다.
+          */}
+          <Link
+            href="/"
+            onClick={(event) => {
+              if (baselineRef.current === null) return;
+              if (signatureOf(sections) === baselineRef.current) return;
+              const leave = window.confirm(
+                "조정한 구역이 저장되지 않았습니다. 나가면 AI가 나눈 결과로 돌아갑니다. 나갈까요?",
+              );
+              if (!leave) event.preventDefault();
+            }}
+            className="text-sm text-chrome-muted hover:text-chrome-text"
+          >
             ← 목록
           </Link>
           <h1 className="text-sm font-medium">구역 확인 · {source.title}</h1>
