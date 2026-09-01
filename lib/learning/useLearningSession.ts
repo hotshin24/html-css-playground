@@ -14,6 +14,7 @@ import { SAVE_DEBOUNCE_MS } from "@/lib/constants";
 import type { SectionInput } from "@/lib/judging/combined";
 import { buildFailureFeedback } from "@/lib/judging/feedback";
 import { judgeSection } from "@/lib/judging/judge";
+import { resolveOutcome } from "@/lib/learning/outcome";
 import {
   loadSource,
   saveSource,
@@ -61,6 +62,7 @@ function restoreFeedback(
   example: { html: string; css: string },
   code: { html: string; css: string },
   restored: boolean,
+  revealedSection: boolean,
 ): FeedbackState {
   if (!result) return { phase: "idle" };
 
@@ -73,6 +75,8 @@ function restoreFeedback(
     stale: result.code.html !== code.html || result.code.css !== code.css,
     /** 이미 끝난 구역을 다시 본 결과. 시도는 쓰이지 않았다. */
     recheck: result.mode === "recheck",
+    /** 시도를 소진해 예시가 공개된 구역인지. 문구를 가르는 데 쓴다. */
+    revealedSection,
   };
 
   if (result.phase === "passed") return { phase: "passed", ...shared };
@@ -140,6 +144,7 @@ export function useLearningSession(sourceId: string): LearningSession {
           target?.example ?? { html: "", css: "" },
           entry?.code ?? { html: "", css: "" },
           true,
+          entry?.status === "revealed",
         ),
       );
       savedCodeRef.current = current
@@ -210,6 +215,7 @@ export function useLearningSession(sourceId: string): LearningSession {
           target?.example ?? { html: "", css: "" },
           entry.code,
           true,
+          entry.status === "revealed",
         ),
       );
     },
@@ -222,11 +228,7 @@ export function useLearningSession(sourceId: string): LearningSession {
 
     setFeedbackState({ phase: "judging" });
 
-    // 이미 끝난 구역에서 다시 누른 경우다. 결과만 새로 보여 주고 진행 상태는
-    // 건드리지 않는다. 통과를 되돌리면 F-08-06이 막으려던 되감기가 생긴다.
-    const isRecheck = progress.status === "passed" || progress.status === "revealed";
     const maxAttempts = source.settings.maxAttempts;
-    const attempt = isRecheck ? progress.attemptsUsed : progress.attemptsUsed + 1;
 
     // 판정에는 방금 작성한 코드를 쓴다. 자동 저장을 기다리지 않는다.
     const sections = toJudgeSections(source).map((entry) =>
@@ -241,28 +243,23 @@ export function useLearningSession(sourceId: string): LearningSession {
       recommended: section.recommended,
     });
 
-    const passed = result.passed;
-    const exhausted = !isRecheck && !passed && attempt >= maxAttempts;
-
-    /*
-     * 판정이 낸 결과와 구역의 진행 상태를 분리한다.
-     *
-     * 통과한 구역을 재확인했는데 지금 코드가 조건을 만족하지 않으면, 결과는
-     * 실패로 보여야 학습자가 무엇이 깨졌는지 안다. 그렇다고 status를 되돌리면
-     * 뒤 구역이 잠겨 F-08-06이 막으려던 되감기가 생긴다.
-     */
-    const phase: SectionResult["phase"] = passed ? "passed" : exhausted ? "revealed" : "failed";
+    const outcome = resolveOutcome({
+      status: progress.status,
+      attemptsUsed: progress.attemptsUsed,
+      maxAttempts,
+      passed: result.passed,
+    });
+    const { isRecheck, attempt } = outcome;
 
     const lastResult: SectionResult = {
-      phase,
+      phase: outcome.phase,
       mode: isRecheck ? "recheck" : "attempt",
-      feedback: passed
+      feedback: result.passed
         ? []
         : buildFailureFeedback(result.outcomes, section.required, attempt, maxAttempts),
       recommended: result.recommended,
       substitutedSectionIds: result.substitutedSectionIds,
-      // 재확인은 시도를 쓰지 않으므로 남은 횟수를 말할 자리가 아니다.
-      attemptsLeft: !isRecheck && phase === "failed" ? maxAttempts - attempt : null,
+      attemptsLeft: outcome.attemptsLeft,
       code: { html, css },
     };
 
@@ -272,7 +269,7 @@ export function useLearningSession(sourceId: string): LearningSession {
       ...progress,
       attemptsUsed: attempt,
       code: { html, css },
-      status: isRecheck ? progress.status : passed ? "passed" : exhausted ? "revealed" : "in_progress",
+      status: outcome.nextStatus,
       // 재확인은 이 구역을 직접 다시 잰 것이므로 재확인 표시를 지운다.
       needsRecheck: false,
       recheckCause: null,
@@ -280,7 +277,7 @@ export function useLearningSession(sourceId: string): LearningSession {
     };
 
     let nextCurrent = sectionId;
-    if (!isRecheck && (passed || exhausted)) {
+    if (outcome.opensNext) {
       const nextLocked = source.sections.find(
         (entry) => nextSections[entry.id]?.status === "locked",
       );
@@ -315,7 +312,15 @@ export function useLearningSession(sourceId: string): LearningSession {
     setSource(updated);
     savedCodeRef.current = { sectionId, html, css };
 
-    setFeedbackState(restoreFeedback(lastResult, section.example, { html, css }, false));
+    setFeedbackState(
+      restoreFeedback(
+        lastResult,
+        section.example,
+        { html, css },
+        false,
+        outcome.nextStatus === "revealed",
+      ),
+    );
   }, [source, sectionId, section, progress, feedbackState.phase, html, css]);
 
   const sectionIndex = source && sectionId

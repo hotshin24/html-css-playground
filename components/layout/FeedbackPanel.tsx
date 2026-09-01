@@ -13,6 +13,8 @@ type ResultMeta = {
   stale: boolean;
   /** 이미 끝난 구역을 다시 본 결과. 시도가 쓰이지 않았다. */
   recheck: boolean;
+  /** 시도를 소진해 예시가 공개된 구역인지. */
+  revealedSection: boolean;
 };
 
 /** 하단 패널이 보여줄 상태. */
@@ -110,15 +112,50 @@ function StaleNotice({ state }: { state: ResultMeta }) {
   );
 }
 
-/** 통과 상태인데 지금 코드로는 조건을 만족하지 않는 경우. */
-function BrokenAfterPassNotice({ state }: { state: FeedbackState }) {
-  if (state.phase !== "failed" || !state.recheck) return null;
-  return (
-    <p className="rounded-md bg-chrome-bg px-3 py-2 text-xs text-chrome-warning">
-      이 구역은 통과로 남아 있지만 지금 코드는 조건을 만족하지 않습니다. 뒤 구역이 잠기지는
-      않으니 편할 때 고치면 됩니다.
-    </p>
-  );
+/** 접혀 있을 때 머리말에 붙는 한 줄 요약. */
+function CollapsedSummary({ state }: { state: FeedbackState }) {
+  const label = (() => {
+    switch (state.phase) {
+      case "passed":
+        return state.restored ? "지난 결과 — 통과" : "통과";
+      case "failed":
+        return state.restored
+          ? `지난 결과 — 지적 ${state.feedback.length}건`
+          : `지적 ${state.feedback.length}건`;
+      case "revealed":
+        return "모범 예시 공개됨";
+      default:
+        return null;
+    }
+  })();
+  if (!label) return null;
+
+  const tone = state.phase === "passed" ? "text-chrome-success" : "text-chrome-warning";
+  return <span className={`text-xs ${tone}`}>{label}</span>;
+}
+
+/** 끝난 구역을 다시 확인해 결과가 상태와 어긋나는 경우. */
+function RecheckMismatchNotice({ state }: { state: FeedbackState }) {
+  if (state.phase === "idle" || state.phase === "judging" || !state.recheck) return null;
+
+  if (state.phase === "failed") {
+    return (
+      <p className="rounded-md bg-chrome-bg px-3 py-2 text-xs text-chrome-warning">
+        이 구역은 통과로 남아 있지만 지금 코드는 조건을 만족하지 않습니다. 뒤 구역이 잠기지는
+        않으니 편할 때 고치면 됩니다.
+      </p>
+    );
+  }
+
+  if (state.phase === "passed" && state.revealedSection) {
+    return (
+      <p className="rounded-md bg-chrome-bg px-3 py-2 text-xs text-chrome-muted">
+        지금 코드는 조건을 만족합니다. 시도를 소진한 구역이라 진행 상태는 그대로입니다.
+      </p>
+    );
+  }
+
+  return null;
 }
 
 function PanelBody({ state }: { state: FeedbackState }) {
@@ -136,6 +173,7 @@ function PanelBody({ state }: { state: FeedbackState }) {
             {state.restored ? "지난 확인 결과 — 통과" : "통과했습니다."}
           </p>
           <StaleNotice state={state} />
+          <RecheckMismatchNotice state={state} />
           <SubstitutionNotice sectionIds={state.substitutedSectionIds} />
           <RecommendedList items={state.recommended} />
         </div>
@@ -152,7 +190,7 @@ function PanelBody({ state }: { state: FeedbackState }) {
               : `남은 시도 ${state.attemptsLeft}회`}
           </p>
           <StaleNotice state={state} />
-          <BrokenAfterPassNotice state={state} />
+          <RecheckMismatchNotice state={state} />
           <FailureList items={state.feedback} />
           <SubstitutionNotice sectionIds={state.substitutedSectionIds} />
           <RecommendedList items={state.recommended} />
@@ -163,7 +201,11 @@ function PanelBody({ state }: { state: FeedbackState }) {
       return (
         <div className="space-y-3">
           <p className="text-sm text-chrome-muted">
-            {state.restored ? "지난 확인 결과 — 시도를 모두 사용함" : "시도를 모두 사용했습니다."}
+            {state.recheck
+              ? "다시 확인했습니다. 시도를 소진한 구역이라 예시는 그대로 볼 수 있습니다."
+              : state.restored
+                ? "지난 확인 결과 — 시도를 모두 사용함"
+                : "시도를 모두 사용했습니다."}
           </p>
           <StaleNotice state={state} />
           <FailureList items={state.feedback} />
@@ -182,8 +224,14 @@ function PanelBody({ state }: { state: FeedbackState }) {
 export default function FeedbackPanel({ expanded, onToggle, state }: FeedbackPanelProps) {
   return (
     <section className="shrink-0 border-t border-chrome-border bg-chrome-panel">
-      <div className="flex h-10 items-center justify-between px-4">
+      <div className="flex h-10 items-center gap-2 px-4">
         <h2 className="text-sm font-medium">채점 피드백</h2>
+        {/*
+          접힌 상태에서는 저장된 결과가 있어도 보이지 않는다. 기본 접힘은
+          유지하되(5.2), 볼 것이 있다는 사실은 알려야 학습자가 펴 볼 생각을 한다.
+        */}
+        {!expanded && <CollapsedSummary state={state} />}
+        <span className="flex-1" />
         <button
           type="button"
           onClick={onToggle}

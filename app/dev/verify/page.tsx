@@ -4,6 +4,7 @@ import CombinedCases from "@/components/dev/CombinedCases";
 import FeedbackCases from "@/components/dev/FeedbackCases";
 import FrameCases from "@/components/dev/FrameCases";
 import ImagePathCases from "@/components/dev/ImagePathCases";
+import OutcomeCases from "@/components/dev/OutcomeCases";
 import SchemaCases from "@/components/dev/SchemaCases";
 import SolutionPreviews from "@/components/dev/SolutionPreviews";
 import SourceSelfCheck from "@/components/dev/SourceSelfCheck";
@@ -27,6 +28,7 @@ export default function VerifyPage() {
       <CheckCases />
       <CombinedCases />
       <FeedbackCases />
+      <OutcomeCases />
       <VerificationRun />
       <AiVerificationRun />
       <SolutionPreviews />
