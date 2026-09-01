@@ -72,6 +72,7 @@ function initialProgress(sections: StoredSection[]): StoredSource["progress"] {
       code: { html: "", css: "" },
       needsRecheck: false,
       recheckCause: null,
+      lastResult: null,
     };
   });
   return { currentSection: sections[0]?.id ?? null, sections: entries };

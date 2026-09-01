@@ -27,7 +27,8 @@ export default function TopBar({
   session,
   onSubmit,
 }: TopBarProps) {
-  const { source, sectionId, sectionIndex, attemptsUsed, maxAttempts, canSubmit } = session;
+  const { source, sectionId, sectionIndex, attemptsUsed, maxAttempts, canSubmit, submitMode } =
+    session;
   const progress = sectionId ? source?.progress.sections[sectionId] : undefined;
   const sectionCount = source?.sections.length ?? 0;
 
@@ -69,7 +70,7 @@ export default function TopBar({
             }의 코드가 바뀌어 다시 확인이 필요합니다.`}
             className="rounded-md bg-chrome-bg px-2 py-1 text-xs text-chrome-warning"
           >
-            재확인 필요
+            다른 구역 변경됨
           </span>
         )}
       </div>
@@ -90,8 +91,16 @@ export default function TopBar({
           </span>
         )}
 
-        <span className="text-sm text-chrome-muted">
+        <span
+          className="text-sm text-chrome-muted"
+          title={
+            submitMode === "recheck"
+              ? "끝난 구역이라 다시 확인해도 시도가 줄지 않습니다."
+              : undefined
+          }
+        >
           시도 {attemptsUsed}/{maxAttempts}
+          {submitMode === "recheck" && " · 소모 없음"}
         </span>
 
         <SettingsPopover settings={settings} onChange={onSettingsChange} />
@@ -102,7 +111,7 @@ export default function TopBar({
           disabled={!canSubmit}
           className="rounded-md bg-chrome-accent px-4 py-1.5 text-sm font-medium text-chrome-on-accent hover:brightness-110 disabled:cursor-not-allowed disabled:bg-chrome-handle disabled:text-chrome-on-disabled disabled:hover:brightness-100"
         >
-          확인
+          {submitMode === "recheck" ? "다시 확인" : "확인"}
         </button>
       </div>
     </header>

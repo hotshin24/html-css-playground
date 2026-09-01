@@ -3,25 +3,29 @@
 import type { FeedbackItem } from "@/lib/judging/feedback";
 import type { RecommendedCondition } from "@/lib/judging/schema";
 
+/** 결과 상태가 공통으로 갖는 값. */
+type ResultMeta = {
+  recommended: RecommendedCondition[];
+  substitutedSectionIds: string[];
+  /** 방금 실행한 결과가 아니라 저장해 둔 것을 다시 꺼낸 경우. */
+  restored: boolean;
+  /** 판정 이후 코드가 바뀌어 결과가 지금 코드와 맞지 않는 경우. */
+  stale: boolean;
+  /** 이미 끝난 구역을 다시 본 결과. 시도가 쓰이지 않았다. */
+  recheck: boolean;
+};
+
 /** 하단 패널이 보여줄 상태. */
 export type FeedbackState =
   | { phase: "idle" }
   | { phase: "judging" }
-  | { phase: "passed"; recommended: RecommendedCondition[]; substitutedSectionIds: string[] }
-  | {
-      phase: "failed";
-      feedback: FeedbackItem[];
-      recommended: RecommendedCondition[];
-      substitutedSectionIds: string[];
-      attemptsLeft: number;
-    }
-  | {
+  | ({ phase: "passed" } & ResultMeta)
+  | ({ phase: "failed"; feedback: FeedbackItem[]; attemptsLeft: number | null } & ResultMeta)
+  | ({
       phase: "revealed";
       feedback: FeedbackItem[];
-      recommended: RecommendedCondition[];
-      substitutedSectionIds: string[];
       example: { html: string; css: string };
-    };
+    } & ResultMeta);
 
 type FeedbackPanelProps = {
   expanded: boolean;
@@ -89,6 +93,34 @@ function ExampleReveal({ example }: { example: { html: string; css: string } }) 
   );
 }
 
+/**
+ * 결과가 지금 코드와 맞지 않을 때의 표시.
+ *
+ * 지우지 않고 남기는 이유는, 학습자가 무엇을 지적받았는지 보려고 돌아오는
+ * 경우가 많고 코드를 조금 고쳤다고 그 정보가 쓸모없어지지는 않기 때문이다.
+ * 낡았다는 사실만 분명히 알린다.
+ */
+function StaleNotice({ state }: { state: ResultMeta }) {
+  if (!state.stale) return null;
+  return (
+    <p className="rounded-md bg-chrome-bg px-3 py-2 text-xs text-chrome-warning">
+      확인한 뒤 코드를 고쳤습니다. 아래는 지난 확인 시점의 결과입니다. 다시 확인을 누르면
+      지금 코드로 새로 판정합니다.
+    </p>
+  );
+}
+
+/** 통과 상태인데 지금 코드로는 조건을 만족하지 않는 경우. */
+function BrokenAfterPassNotice({ state }: { state: FeedbackState }) {
+  if (state.phase !== "failed" || !state.recheck) return null;
+  return (
+    <p className="rounded-md bg-chrome-bg px-3 py-2 text-xs text-chrome-warning">
+      이 구역은 통과로 남아 있지만 지금 코드는 조건을 만족하지 않습니다. 뒤 구역이 잠기지는
+      않으니 편할 때 고치면 됩니다.
+    </p>
+  );
+}
+
 function PanelBody({ state }: { state: FeedbackState }) {
   switch (state.phase) {
     case "idle":
@@ -100,7 +132,10 @@ function PanelBody({ state }: { state: FeedbackState }) {
     case "passed":
       return (
         <div className="space-y-3">
-          <p className="text-sm font-medium">통과했습니다.</p>
+          <p className="text-sm font-medium">
+            {state.restored ? "지난 확인 결과 — 통과" : "통과했습니다."}
+          </p>
+          <StaleNotice state={state} />
           <SubstitutionNotice sectionIds={state.substitutedSectionIds} />
           <RecommendedList items={state.recommended} />
         </div>
@@ -110,8 +145,14 @@ function PanelBody({ state }: { state: FeedbackState }) {
       return (
         <div className="space-y-3">
           <p className="text-sm text-chrome-muted">
-            남은 시도 {state.attemptsLeft}회
+            {state.attemptsLeft === null
+              ? state.restored
+                ? "지난 확인 결과"
+                : "다시 확인했습니다. 시도는 쓰이지 않았습니다."
+              : `남은 시도 ${state.attemptsLeft}회`}
           </p>
+          <StaleNotice state={state} />
+          <BrokenAfterPassNotice state={state} />
           <FailureList items={state.feedback} />
           <SubstitutionNotice sectionIds={state.substitutedSectionIds} />
           <RecommendedList items={state.recommended} />
@@ -121,7 +162,10 @@ function PanelBody({ state }: { state: FeedbackState }) {
     case "revealed":
       return (
         <div className="space-y-3">
-          <p className="text-sm text-chrome-muted">시도를 모두 사용했습니다.</p>
+          <p className="text-sm text-chrome-muted">
+            {state.restored ? "지난 확인 결과 — 시도를 모두 사용함" : "시도를 모두 사용했습니다."}
+          </p>
+          <StaleNotice state={state} />
           <FailureList items={state.feedback} />
           <ExampleReveal example={state.example} />
           <SubstitutionNotice sectionIds={state.substitutedSectionIds} />

@@ -14,7 +14,12 @@ import { SAVE_DEBOUNCE_MS } from "@/lib/constants";
 import type { SectionInput } from "@/lib/judging/combined";
 import { buildFailureFeedback } from "@/lib/judging/feedback";
 import { judgeSection } from "@/lib/judging/judge";
-import { loadSource, saveSource, type StoredSource } from "@/lib/storage/sourceStore";
+import {
+  loadSource,
+  saveSource,
+  type SectionResult,
+  type StoredSource,
+} from "@/lib/storage/sourceStore";
 
 export type LearningSession = {
   source: StoredSource | null;
@@ -28,14 +33,60 @@ export type LearningSession = {
   setCss: (value: string) => void;
   attemptsUsed: number;
   maxAttempts: number;
-  /** 판정 중이거나 이미 끝난 구역이면 false. */
+  /** 확인 버튼을 누를 수 있는지. 끝난 구역에서도 다시 볼 수 있다. */
   canSubmit: boolean;
+  /**
+   * 확인이 새 시도인지 다시 보기인지.
+   *
+   * 이미 통과했거나 예시가 공개된 구역에서는 시도를 차감하지 않는다.
+   * 학습자가 결과를 확인하는 행위에 비용을 물릴 이유가 없다 (F-08-06과 같은 취지).
+   */
+  submitMode: "attempt" | "recheck";
   feedbackState: FeedbackState;
   submit: () => Promise<void>;
   /** 잠기지 않은 구역으로 이동한다 (F-08-03). */
   selectSection: (id: string) => void;
   saveFailed: boolean;
 };
+
+/**
+ * 저장된 판정 결과를 화면 상태로 되살린다.
+ *
+ * 판정 당시 코드와 지금 코드가 다르면 결과가 낡았다는 표시를 붙인다.
+ * 지우지 않는 이유는, 학습자가 무엇을 지적받았는지 보려고 돌아오는 경우가
+ * 많고 코드를 조금 고쳤다고 그 정보가 쓸모없어지지는 않기 때문이다.
+ */
+function restoreFeedback(
+  result: SectionResult | null,
+  example: { html: string; css: string },
+  code: { html: string; css: string },
+  restored: boolean,
+): FeedbackState {
+  if (!result) return { phase: "idle" };
+
+  const shared = {
+    recommended: result.recommended,
+    substitutedSectionIds: result.substitutedSectionIds,
+    /** 방금 실행한 결과가 아니라 저장해 둔 것을 다시 꺼낸 경우. */
+    restored,
+    /** 판정 이후 코드가 바뀌어 결과가 지금 코드와 맞지 않는 경우. */
+    stale: result.code.html !== code.html || result.code.css !== code.css,
+    /** 이미 끝난 구역을 다시 본 결과. 시도는 쓰이지 않았다. */
+    recheck: result.mode === "recheck",
+  };
+
+  if (result.phase === "passed") return { phase: "passed", ...shared };
+  if (result.phase === "revealed") {
+    return { phase: "revealed", feedback: result.feedback, example, ...shared };
+  }
+  // null은 "시도가 쓰이지 않았다"는 뜻이므로 0으로 바꾸면 안 된다.
+  return {
+    phase: "failed",
+    feedback: result.feedback,
+    attemptsLeft: result.attemptsLeft,
+    ...shared,
+  };
+}
 
 /** 판정에 넘길 구역 목록. 저장된 코드와 예시를 붙인다. */
 function toJudgeSections(source: StoredSource): SectionInput[] {
@@ -76,10 +127,21 @@ export function useLearningSession(sourceId: string): LearningSession {
         loaded.progress.currentSection ?? loaded.sections[0]?.id ?? null;
       const code = current ? loaded.progress.sections[current]?.code : undefined;
 
+      const entry = current ? loaded.progress.sections[current] : undefined;
+      const target = loaded.sections.find((item) => item.id === current);
+
       setSource(loaded);
       setSectionId(current);
       setHtml(code?.html ?? "");
       setCss(code?.css ?? "");
+      setFeedbackState(
+        restoreFeedback(
+          entry?.lastResult ?? null,
+          target?.example ?? { html: "", css: "" },
+          entry?.code ?? { html: "", css: "" },
+          true,
+        ),
+      );
       savedCodeRef.current = current
         ? { sectionId: current, html: code?.html ?? "", css: code?.css ?? "" }
         : null;
@@ -135,11 +197,21 @@ export function useLearningSession(sourceId: string): LearningSession {
       const entry = source.progress.sections[id];
       if (!entry || entry.status === "locked") return;
 
+      const target = source.sections.find((item) => item.id === id);
+
       setSectionId(id);
       setHtml(entry.code.html);
       setCss(entry.code.css);
       savedCodeRef.current = { sectionId: id, html: entry.code.html, css: entry.code.css };
-      setFeedbackState({ phase: "idle" });
+      // 구역을 옮겼다 돌아와도 지난 판정 결과를 다시 볼 수 있어야 한다.
+      setFeedbackState(
+        restoreFeedback(
+          entry.lastResult,
+          target?.example ?? { html: "", css: "" },
+          entry.code,
+          true,
+        ),
+      );
     },
     [source],
   );
@@ -150,8 +222,11 @@ export function useLearningSession(sourceId: string): LearningSession {
 
     setFeedbackState({ phase: "judging" });
 
-    const attempt = progress.attemptsUsed + 1;
+    // 이미 끝난 구역에서 다시 누른 경우다. 결과만 새로 보여 주고 진행 상태는
+    // 건드리지 않는다. 통과를 되돌리면 F-08-06이 막으려던 되감기가 생긴다.
+    const isRecheck = progress.status === "passed" || progress.status === "revealed";
     const maxAttempts = source.settings.maxAttempts;
+    const attempt = isRecheck ? progress.attemptsUsed : progress.attemptsUsed + 1;
 
     // 판정에는 방금 작성한 코드를 쓴다. 자동 저장을 기다리지 않는다.
     const sections = toJudgeSections(source).map((entry) =>
@@ -166,13 +241,30 @@ export function useLearningSession(sourceId: string): LearningSession {
       recommended: section.recommended,
     });
 
-    const shared = {
+    const passed = result.passed;
+    const exhausted = !isRecheck && !passed && attempt >= maxAttempts;
+
+    /*
+     * 판정이 낸 결과와 구역의 진행 상태를 분리한다.
+     *
+     * 통과한 구역을 재확인했는데 지금 코드가 조건을 만족하지 않으면, 결과는
+     * 실패로 보여야 학습자가 무엇이 깨졌는지 안다. 그렇다고 status를 되돌리면
+     * 뒤 구역이 잠겨 F-08-06이 막으려던 되감기가 생긴다.
+     */
+    const phase: SectionResult["phase"] = passed ? "passed" : exhausted ? "revealed" : "failed";
+
+    const lastResult: SectionResult = {
+      phase,
+      mode: isRecheck ? "recheck" : "attempt",
+      feedback: passed
+        ? []
+        : buildFailureFeedback(result.outcomes, section.required, attempt, maxAttempts),
       recommended: result.recommended,
       substitutedSectionIds: result.substitutedSectionIds,
+      // 재확인은 시도를 쓰지 않으므로 남은 횟수를 말할 자리가 아니다.
+      attemptsLeft: !isRecheck && phase === "failed" ? maxAttempts - attempt : null,
+      code: { html, css },
     };
-
-    const passed = result.passed;
-    const exhausted = !passed && attempt >= maxAttempts;
 
     // 통과했거나 시도를 소진했으면 다음 구역을 연다 (F-08-02).
     const nextSections = { ...source.progress.sections };
@@ -180,13 +272,15 @@ export function useLearningSession(sourceId: string): LearningSession {
       ...progress,
       attemptsUsed: attempt,
       code: { html, css },
-      status: passed ? "passed" : exhausted ? "revealed" : "in_progress",
+      status: isRecheck ? progress.status : passed ? "passed" : exhausted ? "revealed" : "in_progress",
+      // 재확인은 이 구역을 직접 다시 잰 것이므로 재확인 표시를 지운다.
       needsRecheck: false,
       recheckCause: null,
+      lastResult,
     };
 
     let nextCurrent = sectionId;
-    if (passed || exhausted) {
+    if (!isRecheck && (passed || exhausted)) {
       const nextLocked = source.sections.find(
         (entry) => nextSections[entry.id]?.status === "locked",
       );
@@ -221,24 +315,7 @@ export function useLearningSession(sourceId: string): LearningSession {
     setSource(updated);
     savedCodeRef.current = { sectionId, html, css };
 
-    if (passed) {
-      setFeedbackState({ phase: "passed", ...shared });
-      return;
-    }
-
-    const feedback = buildFailureFeedback(result.outcomes, section.required, attempt, maxAttempts);
-
-    if (exhausted) {
-      setFeedbackState({ phase: "revealed", feedback, example: section.example, ...shared });
-      return;
-    }
-
-    setFeedbackState({
-      phase: "failed",
-      feedback,
-      attemptsLeft: maxAttempts - attempt,
-      ...shared,
-    });
+    setFeedbackState(restoreFeedback(lastResult, section.example, { html, css }, false));
   }, [source, sectionId, section, progress, feedbackState.phase, html, css]);
 
   const sectionIndex = source && sectionId
@@ -258,7 +335,8 @@ export function useLearningSession(sourceId: string): LearningSession {
     setCss,
     attemptsUsed: progress?.attemptsUsed ?? 0,
     maxAttempts: source?.settings.maxAttempts ?? 3,
-    canSubmit: Boolean(section) && feedbackState.phase !== "judging" && !finished,
+    canSubmit: Boolean(section) && feedbackState.phase !== "judging",
+    submitMode: finished ? "recheck" : "attempt",
     feedbackState,
     submit,
     selectSection,
