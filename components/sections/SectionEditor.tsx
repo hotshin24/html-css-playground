@@ -411,7 +411,7 @@ export default function SectionEditor({ sourceId }: { sourceId: string }) {
 
           {!isContiguous(sections) && (
             <p className="mt-4 text-xs text-chrome-danger">
-              구역이 시안을 빈틈없이 덮지 못하고 있습니다.
+              구역이 시안을 빈틈없이 덮지 못합니다.
             </p>
           )}
           {error && <p className="mt-4 text-xs text-chrome-danger">{error}</p>}

@@ -7,6 +7,7 @@
  */
 
 import type { ConditionTypeId } from "@/lib/judging/conditionTypes";
+import { josa } from "@/lib/korean";
 import type { ConditionOutcome } from "@/lib/judging/judge";
 import type { RequiredCondition } from "@/lib/judging/schema";
 
@@ -20,18 +21,6 @@ export type FeedbackItem = {
 };
 
 type Values = Record<string, unknown> | null;
-
-/** 마지막 글자에 받침이 있는지. 조사를 고르는 데 쓴다. */
-function hasFinalConsonant(text: string): boolean {
-  const code = text.charCodeAt(text.length - 1);
-  if (code < 0xac00 || code > 0xd7a3) return false;
-  return (code - 0xac00) % 28 !== 0;
-}
-
-/** 받침 유무에 따라 조사를 고른다. */
-function josa(text: string, withFinal: string, withoutFinal: string): string {
-  return hasFinalConsonant(text) ? withFinal : withoutFinal;
-}
 
 function num(values: Values, key: string): number | null {
   const value = values?.[key];
@@ -54,13 +43,13 @@ function describeColumns(columns: number[]): string {
   return `줄마다 ${columns.join(", ")}개`;
 }
 
-/** accept 항목을 "6개짜리 목록 1벌" 형태로. */
+/** accept 항목을 "li 6개짜리 ul 1벌" 형태로. */
 function describeListAccept(accept: Record<string, unknown>[]): string {
   return accept
     .map((params) => {
       const items = num(params, "itemsPerGroup");
       const groups = num(params, "groupCount");
-      return `${items}개짜리 목록 ${groups}벌`;
+      return `li ${items}개짜리 ul ${groups}벌`;
     })
     .join(" 또는 ");
 }
@@ -69,27 +58,27 @@ function buildMessage(outcome: ConditionOutcome): string {
   switch (outcome.type) {
     case "heading-single": {
       const count = num(outcome.actual, "count") ?? 0;
-      if (count === 0) return "문서에 최상위 제목이 없습니다. 하나 두어야 합니다.";
-      return `문서에 최상위 제목이 ${count}개 있습니다. 하나만 두어야 합니다.`;
+      if (count === 0) return "문서에 h1이 없습니다. 하나 두어야 합니다.";
+      return `문서에 h1이 ${count}개입니다. 하나만 두어야 합니다.`;
     }
 
     case "heading-order": {
       const from = num(outcome.actual, "from");
       const to = num(outcome.actual, "to");
-      if (from === null || to === null) return "제목 단계가 순서대로 내려가지 않았습니다.";
-      return `제목 단계가 ${from}단계에서 ${to}단계로 건너뛰었습니다. 한 단계씩 내려가야 합니다.`;
+      if (from === null || to === null) return "제목 레벨이 순서대로 내려가지 않았습니다.";
+      return `제목 레벨이 h${from}에서 h${to}로 건너뛰었습니다. 한 단계씩 내려가야 합니다.`;
     }
 
     case "image-alt": {
       const total = num(outcome.actual, "imageCount") ?? 0;
       const missing = num(outcome.actual, "missingAlt") ?? 0;
-      return `이미지 ${total}개 중 ${missing}개에 대체 텍스트 속성이 없습니다. 장식용 이미지라면 빈 값으로 두어도 됩니다.`;
+      return `img ${total}개 중 ${missing}개에 alt 속성이 없습니다. 장식용 이미지라면 빈 값으로 두어도 됩니다.`;
     }
 
     case "form-label": {
       const total = num(outcome.actual, "controlCount") ?? 0;
       const unlabeled = num(outcome.actual, "unlabeled") ?? 0;
-      return `입력 요소 ${total}개 중 ${unlabeled}개에 레이블이 연결되지 않았습니다.`;
+      return `입력 요소 ${total}개 중 ${unlabeled}개에 label이 연결되지 않았습니다.`;
     }
 
     case "list-grouping": {
@@ -100,9 +89,9 @@ function buildMessage(outcome: ConditionOutcome): string {
       const counts = numbers(outcome.actual, "listItemCounts");
 
       if (!counts || counts.length === 0) {
-        return `반복되는 항목이 목록으로 묶이지 않았습니다. ${expectedText}${josa(expectedText, "이", "가")} 필요합니다.`;
+        return `반복되는 항목이 ul로 묶이지 않았습니다. ${expectedText}${josa(expectedText, "이", "가")} 필요합니다.`;
       }
-      return `목록은 있으나 항목 수가 맞지 않습니다. 현재 목록의 항목 수는 ${counts.join(", ")}개이고, ${expectedText}${josa(expectedText, "이", "가")} 필요합니다.`;
+      return `ul은 있으나 li 개수가 맞지 않습니다. 현재 li 개수는 ${counts.join(", ")}개이고, ${expectedText}${josa(expectedText, "이", "가")} 필요합니다.`;
     }
 
     case "layout-result": {
@@ -131,39 +120,41 @@ function buildMessage(outcome: ConditionOutcome): string {
  */
 const FIXED_HINTS: Record<ConditionTypeId, [string, string, string]> = {
   "heading-single": [
-    "문서 전체의 제목 구조를 확인해보세요.",
-    "페이지에서 가장 상위 제목이 몇 개인지 세어보세요.",
-    "최상위 제목은 문서에 하나만 두어야 합니다.",
+    "문서 전체의 제목 구조를 확인해 보세요.",
+    "페이지에서 h1이 몇 개인지 세어 보세요.",
+    "h1은 문서에 하나만 두어야 합니다. 나머지 제목은 h2 아래로 내립니다.",
   ],
   "heading-order": [
-    "제목들의 단계가 순서대로 내려가는지 확인해보세요.",
-    "앞선 제목보다 두 단계 이상 낮은 제목이 있습니다.",
-    "제목 단계는 한 번에 한 단계씩만 내려갈 수 있습니다.",
+    "제목 레벨이 순서대로 내려가는지 확인해 보세요.",
+    "앞선 제목보다 두 레벨 이상 낮은 제목이 있습니다. h2 다음에 h4가 오는 식입니다.",
+    "제목 레벨은 한 번에 하나씩만 내려갈 수 있습니다. h2 다음은 h3입니다.",
   ],
   "image-alt": [
-    "이미지 요소의 속성을 다시 확인해보세요.",
-    "화면을 볼 수 없는 사용자에게 이 이미지를 어떻게 설명할지 생각해보세요.",
-    "모든 이미지에는 대체 텍스트 속성이 필요합니다. 장식용이라면 빈 값으로 둡니다.",
+    "img의 속성을 다시 확인해 보세요.",
+    "화면을 볼 수 없는 사용자에게 이 이미지를 어떻게 설명할지 생각해 보세요.",
+    "모든 img에는 alt 속성이 필요합니다. 장식용이라면 빈 값으로 둡니다.",
   ],
   "form-label": [
-    "입력 요소 주변의 설명 문구를 확인해보세요.",
-    "설명 문구와 입력 요소가 서로 연결되어 있는지 생각해보세요.",
-    "모든 입력 요소에는 레이블이 연결되어야 합니다.",
+    "입력 요소 주변의 설명 문구를 확인해 보세요.",
+    "설명 문구와 입력 요소가 서로 연결되어 있는지 생각해 보세요.",
+    // aria-label·aria-labelledby로도 통과한다. 안내하는 자리이므로 함께 밝힌다.
+    "입력 요소에는 label을 연결하거나 aria-label을 지정해야 합니다.",
   ],
   "list-grouping": [
-    "반복되는 항목이 있는 영역을 다시 확인해보세요.",
-    "같은 구조가 여러 번 나타나고 있습니다. 이런 반복을 어떻게 표현하는지 생각해보세요.",
-    "반복되는 항목은 목록 요소로 묶습니다.",
+    "반복되는 항목이 있는 영역을 다시 확인해 보세요.",
+    "같은 구조가 여러 번 나타나고 있습니다. 이런 반복을 어떻게 표현하는지 생각해 보세요.",
+    // ol·menu로도 통과한다. 안내하는 자리이므로 함께 밝힌다.
+    "반복되는 항목은 ul로 묶고 항목마다 li에 담습니다. 순서가 뜻을 가지면 ol을 씁니다.",
   ],
   "layout-result": [
-    "이 영역의 배치를 시안과 비교해보세요.",
-    "항목이 몇 개씩 몇 줄로 놓여야 하는지 시안에서 확인해보세요.",
+    "이 영역의 배치를 시안과 비교해 보세요.",
+    "항목이 몇 개씩 몇 줄로 놓여야 하는지 시안에서 확인해 보세요.",
     "시안과 같은 줄 수와 열 수가 되도록 배치해야 합니다.",
   ],
   "heading-hierarchy": [
-    "제목들의 상하 관계를 확인해보세요.",
-    "구역 제목과 항목 제목 중 어느 쪽이 상위인지 생각해보세요.",
-    "항목 제목은 구역 제목보다 하위 단계여야 합니다.",
+    "제목들의 상하 관계를 확인해 보세요.",
+    "구역 제목과 항목 제목 중 어느 쪽이 상위인지 생각해 보세요.",
+    "항목 제목은 구역 제목보다 한 레벨 아래여야 합니다.",
   ],
 };
 
@@ -186,7 +177,7 @@ function resolveHint(
 ): string {
   const authored = condition?.hints?.[String(tier) as "1" | "2" | "3"];
   if (authored) return authored;
-  return FIXED_HINTS[outcome.type]?.[tier - 1] ?? "조건을 다시 확인해보세요.";
+  return FIXED_HINTS[outcome.type]?.[tier - 1] ?? "조건을 다시 확인해 보세요.";
 }
 
 /** 실패한 조건들에 대해 표시할 문구와 힌트를 만든다. */

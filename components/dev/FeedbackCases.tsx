@@ -94,8 +94,8 @@ async function runCases(): Promise<CaseResult[]> {
     const single = feedback.find((item) => item.type === "heading-single");
 
     results.push({
-      name: "heading-order 문구에 실제 단계가 들어간다",
-      passed: Boolean(order?.message.includes("1단계에서 3단계로")),
+      name: "heading-order 문구에 실제 레벨이 들어간다",
+      passed: Boolean(order?.message.includes("h1에서 h3로")),
       detail: order?.message ?? "(없음)",
     });
     results.push({
@@ -105,7 +105,7 @@ async function runCases(): Promise<CaseResult[]> {
     });
     results.push({
       name: "엔진 상시 조건은 코드에 고정된 힌트를 쓴다 (F-07-08)",
-      passed: single?.hint === "페이지에서 가장 상위 제목이 몇 개인지 세어보세요.",
+      passed: single?.hint === "페이지에서 h1이 몇 개인지 세어 보세요.",
       detail: `2회차 힌트 = ${single?.hint ?? "(없음)"}`,
     });
   }
@@ -138,13 +138,15 @@ async function runCases(): Promise<CaseResult[]> {
     });
     results.push({
       name: "힌트가 없으면 고정 템플릿으로 대체한다",
-      passed: fallback[0]?.hint === "반복되는 항목은 목록 요소로 묶습니다.",
+      passed:
+        fallback[0]?.hint ===
+        "반복되는 항목은 ul로 묶고 항목마다 li에 담습니다. 순서가 뜻을 가지면 ol을 씁니다.",
       detail: fallback[0]?.hint ?? "(없음)",
     });
     results.push({
       name: "목록 조건 문구에 기대 형태와 실제 항목 수가 함께 들어간다",
       passed:
-        authored[0]?.message.includes("6개짜리 목록 1벌 또는 2개짜리 목록 3벌") === true &&
+        authored[0]?.message.includes("li 6개짜리 ul 1벌 또는 li 2개짜리 ul 3벌") === true &&
         authored[0]?.message.includes("3개") === true,
       detail: authored[0]?.message ?? "(없음)",
     });

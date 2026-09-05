@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { runConditionGeneration } from "@/lib/ai/runConditionGeneration";
 import { runStructureAnalysis } from "@/lib/ai/runStructureAnalysis";
+import { josa } from "@/lib/korean";
 import {
   deleteSource,
   listSources,
@@ -221,7 +222,9 @@ export default function SourceList() {
                 className="flex items-center justify-between rounded-lg border border-chrome-border bg-chrome-panel p-4"
               >
                 <p className="text-sm">
-                  <strong>{source.title}</strong>을(를) 삭제하면 작성한 코드와 진행 상태도 함께
+                  {/* 제목은 사용자가 붙이므로 받침을 미리 정해 둘 수 없다. */}
+                  <strong>{source.title}</strong>
+                  {josa(source.title, "을", "를")} 삭제하면 작성한 코드와 진행 상태도 함께
                   사라집니다.
                 </p>
                 <div className="flex gap-2">

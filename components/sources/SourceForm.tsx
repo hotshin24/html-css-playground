@@ -47,7 +47,7 @@ export default function SourceForm() {
     if (!selected) return;
 
     if (!ACCEPTED_TYPES.includes(selected.type)) {
-      setError("PNG 또는 JPG 파일을 올려주세요.");
+      setError("PNG 또는 JPG 파일을 올려 주세요.");
       return;
     }
 
@@ -79,7 +79,7 @@ export default function SourceForm() {
 
     if (!source) {
       setSaving(false);
-      setError("저장에 실패했습니다. 브라우저 저장 공간을 확인해주세요.");
+      setError("저장에 실패했습니다. 브라우저 저장 공간을 확인해 주세요.");
       return;
     }
 
